@@ -76,7 +76,8 @@ int gameplay(char *board, char *player1, char *player2, int columns, int lines)
 
 int initializeboard(char *board, int columns, int lines)
 {
-	for(int i=0;i<columns*lines;i++)
+	int i;
+	for(i=0;i < columns*lines; i++)
 	{
 		*(board+i)='*';
 		if(i==columns*lines-1)
