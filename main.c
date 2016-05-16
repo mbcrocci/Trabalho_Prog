@@ -3,9 +3,10 @@
 
 int printboard(char *board, int columns, int lines)
 {
-	for(int i=0;i<columns*lines;i++)
+	int i;
+	for(i = 0; i < columns*lines; i++)
 	{
-		if(i%columns==0)
+		if(i % columns == 0)
 			printf("\n|");
 		printf(" %c |", *(board+i));
 	}
