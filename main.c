@@ -71,6 +71,7 @@ int gameplay(char *board, char *player1, char *player2, int columns, int lines)
 				*(board+i*columns+j*lines)=' ';
 		printboard(board, columns, lines);
 	} while(win);
+	getchar();
 	printf("%s you have won the game!\n", *winner);
 	return 0;
 }
