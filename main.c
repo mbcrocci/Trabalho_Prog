@@ -33,7 +33,7 @@ int gameplay(char *board, char *player1, char *player2, int columns, int lines)
 {
 	int win=1, x, y, i, j;
 	char *winner = NULL;
-	system("clear");
+	//system("clear");
 	do {
 		do {
 			printf("%s, your turn to play (c/l): ", player1);
@@ -47,8 +47,8 @@ int gameplay(char *board, char *player1, char *player2, int columns, int lines)
 			break;
 		}
 
-		for(i=0; i<x; i++)
-			for(j=0; j<y; j++)
+		for(i=0; i<=x; i++)
+			for(j=0; j<=y; j++)
 				*(board+i*columns+j*lines)=' ';
 
 		printboard(board, columns, lines);
@@ -100,7 +100,7 @@ int createboard(char *player1, char *player2, int *columns, int *lines)
 	scanf("%s", player2);
 
 	do {
-		system("clear");
+		//system("clear");
 
 		printf("\t%s, please insert the size of the game board.\nColumns: ", player1);
 		scanf("%d", columns);
@@ -165,7 +165,7 @@ int menu()
 
 	do {
 		// (TODO): include header
-		system("clear");
+		//system("clear");
 
 		printf("\t1. New Game\n\t2. Load Last Game\n\t3. Credits\n\t4. Quit Game\n\nOption: ");
 		scanf("%d", &option);
