@@ -32,12 +32,10 @@ int validation(char *board, int x, int y, int columns, int lines)
 int gameplay(char *board, char *player1, char *player2, int columns, int lines)
 {
 	int win=1, x, y, i, j;
-	char *winner;
+	char *winner = NULL;
 	system("clear");
-	do
-	{
-		do
-		{
+	do {
+		do {
 			printf("%s, your turn to play (c/l): ", player1);
 			scanf("%d %d", &x, &y);
 		} while(validation(board, x, y, columns, lines));
@@ -56,8 +54,7 @@ int gameplay(char *board, char *player1, char *player2, int columns, int lines)
 		printboard(board, columns, lines);
 		getchar();
 
-		do
-		{
+		do {
 			printf("%s, your turn to play: ", player2);
 			scanf("%d %d", &x, &y);
 		} while(validation(board, x, y, columns, lines));
@@ -77,7 +74,7 @@ int gameplay(char *board, char *player1, char *player2, int columns, int lines)
 	} while(win);
 
 	getchar();
-	printf("%s you have won the game!\n", *winner);
+	printf("%s you have won the game!\n", winner);
 	return 0;
 }
 
@@ -97,10 +94,10 @@ int createboard(char *player1, char *player2, int *columns, int *lines)
 {
 	char confirmation='n';
 
-		printf("Player 1, please insert your name: ");
-		scanf("%s", player1);
-		printf("Player 2, please insert your name: ");
-		scanf("%s", player2);
+	printf("Player 1, please insert your name: ");
+	scanf("%s", player1);
+	printf("Player 2, please insert your name: ");
+	scanf("%s", player2);
 
 	do {
 		system("clear");
@@ -138,7 +135,7 @@ int createboard(char *player1, char *player2, int *columns, int *lines)
 				scanf("%c", &confirmation);
 				getchar();
 			}
-	} while(confirmation!='y' && confirmation!='Y'
+	} while((confirmation!='y' && confirmation!='Y')
 			|| *lines < 4 || *lines > 8 || *columns < 6 || *columns > 10);
 
 	return 0;
@@ -166,8 +163,8 @@ int menu()
 	int option;
 	char confirmation;
 
-	do
-	{
+	do {
+		// (TODO): include header
 		system("clear");
 
 		printf("\t1. New Game\n\t2. Load Last Game\n\t3. Credits\n\t4. Quit Game\n\nOption: ");
@@ -183,7 +180,7 @@ int menu()
 			default: printf("Invalid option!\nPress any key to continue!"); getchar();
 		}
 
-	} while(confirmation!='Y' && confirmation!='y' || option!=4);
+	} while((confirmation!='Y' && confirmation!='y') || option!=4);
 
 	return 0;
 }
