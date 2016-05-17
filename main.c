@@ -40,17 +40,19 @@ int gameplay(char *board, char *player1, char *player2, int columns, int lines)
 		{
 			printf("%s, your turn to play (c/l): ", player1);
 			scanf("%d %d", &x, &y);
-		}
-		while(validation(board, x, y, columns, lines));
+		} while(validation(board, x, y, columns, lines));
+
 		if(validation(board, x, y, columns, lines))
 		{
 			winner=player2;
 			win=0;
 			break;
 		}
-		for(i=0;i<x;i++)
-			for(j=0;j<y;j++)
+
+		for(i=0; i<x; i++)
+			for(j=0; j<y; j++)
 				*(board+i*columns+j*lines)=' ';
+
 		printboard(board, columns, lines);
 		getchar();
 
@@ -58,19 +60,22 @@ int gameplay(char *board, char *player1, char *player2, int columns, int lines)
 		{
 			printf("%s, your turn to play: ", player2);
 			scanf("%d %d", &x, &y);
-		}
-		while(validation(board, x, y, columns, lines));
+		} while(validation(board, x, y, columns, lines));
+
 		if(validation(board, x, y, columns, lines))
 		{
 			winner=player1;
 			win=0;
 			break;
 		}
-		for(i=0;i<x;i++)
-			for(j=0;j<y;j++)
+
+		for(i=0; i<x; i++)
+			for(j=0; j<y; j++)
 				*(board+i*columns+j*lines)=' ';
+
 		printboard(board, columns, lines);
 	} while(win);
+
 	getchar();
 	printf("%s you have won the game!\n", *winner);
 	return 0;
@@ -79,7 +84,7 @@ int gameplay(char *board, char *player1, char *player2, int columns, int lines)
 int initializeboard(char *board, int columns, int lines)
 {
 	int i;
-	for(i=0;i < columns*lines; i++)
+	for(i=0; i < columns*lines; i++)
 	{
 		*(board+i)='*';
 		if(i==columns*lines-1)
@@ -133,8 +138,8 @@ int createboard(char *player1, char *player2, int *columns, int *lines)
 				scanf("%c", &confirmation);
 				getchar();
 			}
-	}
-	while(confirmation!='y' && confirmation!='Y' || *lines < 4 || *lines > 8 || *columns < 6 || *columns > 10);
+	} while(confirmation!='y' && confirmation!='Y'
+			|| *lines < 4 || *lines > 8 || *columns < 6 || *columns > 10);
 
 	return 0;
 }
@@ -178,8 +183,7 @@ int menu()
 			default: printf("Invalid option!\nPress any key to continue!"); getchar();
 		}
 
-	}
-	while(confirmation!='Y' && confirmation!='y' || option!=4);
+	} while(confirmation!='Y' && confirmation!='y' || option!=4);
 
 	return 0;
 }
