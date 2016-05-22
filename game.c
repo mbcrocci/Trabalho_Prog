@@ -3,10 +3,14 @@
 
 void printboard(char *board, int lines, int columns)
 {
-  int i;
-  for(i = 0; i < lines * columns; i++) {
+  int i, j;
+
+  printf("\t\t|");
+  for(i = 0, j = 'A'; i < columns; i++)
+    printf(" %c |", j++);
+  for(i = 0, j = 1; i < lines * columns; i++) {
     if(i % columns == 0)
-      printf("\n|");
+      printf("\n\t   | %2d |", j++);
     printf(" %c |", *(board+i));
   }
   putchar('\n');
@@ -92,15 +96,12 @@ void play(char *board, char *player1, char *player2, int lines, int columns, cha
   do {
     printf("%s, your turn to play (l/c): ", player);
     scanf("%d %d", &x, &y);
-    printf("cell selected: %c\n", *(board + ( ((x - 1) * columns) + y ) - 1));
   } while(validation_play(board, player, winner, x, y, lines, columns, lose));
 
   for(i = 0; i < x; i++)
     for(j = 0; j < y;j++)
       if(*(board + i * columns + j) != 'X')
         *(board + i * columns + j) = ' ';
-
-  //return *(board + i * columns + j) != 'X';
 }
 
 int game()
