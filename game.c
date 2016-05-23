@@ -8,8 +8,8 @@ struct jogada {
     
     struct jogada * prox;
 };
-typedef struct jogada jogada, *p_jogada ;
 
+typedef struct jogada jogada, *p_jogada ;
 
 void add_play (p_jogada lista, char *board, int l, int c)
 {
