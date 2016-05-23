@@ -2,7 +2,7 @@
 #define NAME_STR_LEN 40
 
 typedef struct {
-    char *board;
+    char **board;
     int l, c;
     
     p_jogada prox;
@@ -10,10 +10,27 @@ typedef struct {
 
 typedef *jogada p_jogada;
 
-void add_play (p_jogada *lista)
+void add_play (p_jogada *lista, char *board, int l, int c)
 {
     jogada nova = malloc(sizeof(jogada));
+    nova->l = l;
+    nova->c = c;
+    
+    nova->board = &board; // ver isto
+    
     lista->prox = nova
+}
+
+void escrever_tudo (p_jogada lista)
+{
+    // (TODO): abrir decentemente o ficheiro
+    
+    FILE *f = fopen("asdasd", "wb");
+    while (lista->prox != NULL) {
+        fwrite(lista, sizeof(jogada), 1, f);
+        lista = lista->prox;
+    }
+    fclose(f)
 }
 
 void printboard(char *board, int lines, int columns)
@@ -135,10 +152,16 @@ int game()
 {
   char player1[NAME_STR_LEN], player2[NAME_STR_LEN], winner[NAME_STR_LEN];
   int lines, columns, lose = 1;
+    char **board;
 
   createboard(player1, player2, &lines, &columns);
 
-  char board[columns][lines];
+    board = malloc(sizeof(char) * lines)
+    for (i = 0; i < lines; i++)
+        board[i] = malloc (sizeof(char) * columns)
+    
+    
+    
   initializeboard(*board, lines, columns);
   printboard(*board, lines, columns);
 
