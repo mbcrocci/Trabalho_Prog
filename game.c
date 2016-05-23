@@ -1,24 +1,26 @@
 #include <stdio.h>
+#include <stdlib.h>
 #define NAME_STR_LEN 40
 
-typedef struct {
+struct jogada {
     char **board;
     int l, c;
     
-    p_jogada prox;
-} jogada;
+    struct jogada * prox;
+};
+typedef struct jogada jogada, *p_jogada ;
 
-typedef *jogada p_jogada;
 
-void add_play (p_jogada *lista, char *board, int l, int c)
+void add_play (p_jogada lista, char *board, int l, int c)
 {
-    jogada nova = malloc(sizeof(jogada));
+    p_jogada nova = malloc(sizeof(jogada));
+    
     nova->l = l;
     nova->c = c;
-    
     nova->board = &board; // ver isto
+    nova->prox = NULL;
     
-    lista->prox = nova
+    lista->prox = nova;
 }
 
 void escrever_tudo (p_jogada lista)
@@ -30,7 +32,7 @@ void escrever_tudo (p_jogada lista)
         fwrite(lista, sizeof(jogada), 1, f);
         lista = lista->prox;
     }
-    fclose(f)
+    fclose(f);
 }
 
 void printboard(char *board, int lines, int columns)
