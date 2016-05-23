@@ -6,22 +6,26 @@ void printboard(char *board, int lines, int columns)
   int i, j;
 
   printf("\t\t|");
+    
   for(i = 0, j = 'A'; i < columns; i++)
     printf(" %c |", j++);
+    
   for(i = 0, j = 1; i < lines * columns; i++) {
     if(i % columns == 0)
       printf("\n\t   | %2d |", j++);
+      
     printf(" %c |", *(board+i));
   }
+    
   putchar('\n');
 }
 
 void initializeboard(char *board, int lines, int columns)
 {
   int i;
-  for(i = 0; i < lines * columns; i++)
-  {
+  for(i = 0; i < lines * columns; i++) {
     *(board+i) = '*';
+      
     if(i == columns * lines -1)
       *(board+i) = 'X';
   }
@@ -43,7 +47,7 @@ int createboard(char *player1, char *player2,  int *lines, int *columns)
     scanf("%d", columns);
     getchar();
 
-    if(*columns > *lines)
+    if(*columns > *lines) {
       if(*lines < 4 || *lines > 8)
         if(*columns < 6 || *columns > 10) {
           printf("\nGame board size invalid! Number of columns and lines invalid!\nPress any key to continue");
@@ -63,7 +67,7 @@ int createboard(char *player1, char *player2,  int *lines, int *columns)
           scanf("%c", &confirmation);
           getchar();
         }
-    else {
+    } else {
       printf("Number of columns is less than number of lines.\nPress any key to continue");
       getchar();
     }
@@ -72,24 +76,28 @@ int createboard(char *player1, char *player2,  int *lines, int *columns)
   return 0;
 }
 
-int validation_play(char *board, char *winner, char *player, int x, int y, int lines, int columns, int *lose)
+int validation_play(char *board, char *winner, char *player,
+                    int x, int y, int lines, int columns, int *lose)
 {
   if(x > 0 && x <= lines && y > 0 && y <=columns)
     if(*(board + ( (x - 1) * columns + y ) - 1) == 'X') {
         winner = player;
         *lose = 0;
         return 0;
-    }
-    else
+        
+    } else {
       if(*(board + ( ((x - 1) * columns) + y ) - 1) == ' ')
         return 1;
+        
       else
         return 0;
+    }
   else
     return 1;
 }
 
-void play(char *board, char *player1, char *player2, int lines, int columns, char *player, char *winner, int *lose)
+void play(char *board, char *player1, char *player2,
+          int lines, int columns, char *player, char *winner, int *lose)
 {
   int x, y, i, j;
 
@@ -118,11 +126,14 @@ int game()
   do {
     play(*board, player1, player2, lines, columns, player1, winner, &lose);
     printboard(*board, lines, columns);
-    if(lose == 0)
-      break;
+      
+    if(lose == 0) break;
+      
     play(*board, player1, player2, lines, columns, player2, winner, &lose);
     printboard(*board, lines, columns);
+
   } while(lose);
+    
   printf("%s, you are the winner!\n", winner);
   getchar();
   return 0;
