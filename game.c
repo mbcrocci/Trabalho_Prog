@@ -91,12 +91,8 @@ int createboard(char *player1, char *player2,  int *lines, int *columns)
   return 0;
 }
 
-<<<<<<< HEAD
 int validation_play(char *board, char *winner, char *player,
                     int x, int y, int lines, int columns, int *lose)
-=======
-int validation_play(char *board, char *player, char *nextplayer, char *winner, int x, int y, int lines, int columns, int *lose)
->>>>>>> 70eb666271cb517d29a1fa4ebfc7e0ee596e0c10
 {
   if(x > 0 && x <= lines && y > 0 && y <=columns)
     if(*(board + ( (x - 1) * columns + y ) - 1) == 'X') {
