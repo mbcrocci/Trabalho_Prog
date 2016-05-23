@@ -72,11 +72,11 @@ int createboard(char *player1, char *player2,  int *lines, int *columns)
   return 0;
 }
 
-int validation_play(char *board, char *winner, char *player, int x, int y, int lines, int columns, int *lose)
+int validation_play(char *board, char *player, char *nextplayer, char *winner, int x, int y, int lines, int columns, int *lose)
 {
   if(x > 0 && x <= lines && y > 0 && y <=columns)
     if(*(board + ( (x - 1) * columns + y ) - 1) == 'X') {
-        winner = player;
+        *winner = *nextplayer;
         *lose = 0;
         return 0;
     }
@@ -89,14 +89,14 @@ int validation_play(char *board, char *winner, char *player, int x, int y, int l
     return 1;
 }
 
-void play(char *board, char *player1, char *player2, int lines, int columns, char *player, char *winner, int *lose)
+void play(char *board, char *player, char *nextplayer, char *winner, int lines, int columns, int *lose)
 {
   int x, y, i, j;
 
   do {
     printf("%s, your turn to play (l/c): ", player);
     scanf("%d %d", &x, &y);
-  } while(validation_play(board, player, winner, x, y, lines, columns, lose));
+  } while(validation_play(board, player, nextplayer, winner, x, y, lines, columns, lose));
 
   for(i = 0; i < x; i++)
     for(j = 0; j < y;j++)
@@ -106,7 +106,7 @@ void play(char *board, char *player1, char *player2, int lines, int columns, cha
 
 int game()
 {
-  char player1[NAME_STR_LEN], player2[NAME_STR_LEN], *winner = NULL;
+  char player1[NAME_STR_LEN], player2[NAME_STR_LEN], winner[NAME_STR_LEN];
   int lines, columns, lose = 1;
 
   createboard(player1, player2, &lines, &columns);
@@ -116,11 +116,11 @@ int game()
   printboard(*board, lines, columns);
 
   do {
-    play(*board, player1, player2, lines, columns, player1, winner, &lose);
+    play(*board, player1, player2, winner, lines, columns, &lose);
     printboard(*board, lines, columns);
     if(lose == 0)
       break;
-    play(*board, player1, player2, lines, columns, player2, winner, &lose);
+    play(*board, player2, player1, winner, lines, columns, &lose);
     printboard(*board, lines, columns);
   } while(lose);
   printf("%s, you are the winner!\n", winner);
