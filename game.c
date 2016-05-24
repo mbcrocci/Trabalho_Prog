@@ -130,12 +130,8 @@ int validation_play(char *board, char *winner, char *player,
     return 1;
 }
 
-<<<<<<< HEAD
 void play(char *board, char *player1, char *player2,
           int lines, int columns, char *player, char *winner, int *lose)
-=======
-void play(char *board, char *player, char *nextplayer, char *winner, int lines, int columns, int *lose)
->>>>>>> 70eb666271cb517d29a1fa4ebfc7e0ee596e0c10
 {
   int x, y, i, j;
 
@@ -152,34 +148,30 @@ void play(char *board, char *player, char *nextplayer, char *winner, int lines, 
 
 int game()
 {
-  char player1[NAME_STR_LEN], player2[NAME_STR_LEN], winner[NAME_STR_LEN];
-  int lines, columns, lose = 1;
+    char player1[NAME_STR_LEN], player2[NAME_STR_LEN], winner[NAME_STR_LEN];
+    int lines, columns, lose = 1, i;
     char **board;
 
-  createboard(player1, player2, &lines, &columns);
+    createboard(player1, player2, &lines, &columns);
 
-    board = malloc(sizeof(char) * lines)
+    board = malloc(sizeof(char) * lines);
     for (i = 0; i < lines; i++)
-        board[i] = malloc (sizeof(char) * columns)
+        board[i] = malloc (sizeof(char) * columns);
     
     
     
-  initializeboard(*board, lines, columns);
-  printboard(*board, lines, columns);
-
-  do {
-    play(*board, player1, player2, winner, lines, columns, &lose);
+    initializeboard(*board, lines, columns);
     printboard(*board, lines, columns);
-<<<<<<< HEAD
+
+    do {
+        play(*board, player1, player2, winner, lines, columns, &lose);
+        printboard(*board, lines, columns);
       
-    if(lose == 0) break;
+        if(lose == 0) break;
       
-    play(*board, player1, player2, lines, columns, player2, winner, &lose);
+        play(*board, player1, player2, lines, columns, player2, winner, &lose);
 =======
-    if(lose == 0)
-      break;
-    play(*board, player2, player1, winner, lines, columns, &lose);
->>>>>>> 70eb666271cb517d29a1fa4ebfc7e0ee596e0c10
+
     printboard(*board, lines, columns);
 
   } while(lose);
