@@ -60,7 +60,8 @@ int createboard(char *player1, char *player2,  int *lines, int *columns)
                    "Press any key to continue");
             getchar();
           } else {
-          printf("\n\t%s, do you agree with the game board size? (Y/N) ", player2);
+          printf("\n\t%s, do you agree with the game board size? (Y/N) ",
+                 player2);
           scanf("%c", &confirmation);
           getchar();
           }
