@@ -1,65 +1,27 @@
 #include <stdio.h>
-#include <stdlib.h>
 #define NAME_STR_LEN 40
-
-struct jogada {
-    char **board;
-    int l, c;
-    
-    struct jogada * prox;
-};
-
-typedef struct jogada jogada, *p_jogada ;
-
-void add_play (p_jogada lista, char *board, int l, int c)
-{
-    p_jogada nova = malloc(sizeof(jogada));
-    
-    nova->l = l;
-    nova->c = c;
-    nova->board = &board; // ver isto
-    nova->prox = NULL;
-    
-    lista->prox = nova;
-}
-
-void escrever_tudo (p_jogada lista)
-{
-    // (TODO): abrir decentemente o ficheiro
-    
-    FILE *f = fopen("asdasd", "wb");
-    while (lista->prox != NULL) {
-        fwrite(lista, sizeof(jogada), 1, f);
-        lista = lista->prox;
-    }
-    fclose(f);
-}
 
 void printboard(char *board, int lines, int columns)
 {
   int i, j;
 
   printf("\t\t|");
-    
   for(i = 0, j = 'A'; i < columns; i++)
     printf(" %c |", j++);
-    
   for(i = 0, j = 1; i < lines * columns; i++) {
     if(i % columns == 0)
       printf("\n\t   | %2d |", j++);
-      
     printf(" %c |", *(board+i));
   }
-    
   putchar('\n');
 }
 
 void initializeboard(char *board, int lines, int columns)
 {
   int i;
-  for(i = 0; i < lines * columns; i++) {
+  for(i = 0; i < lines * columns; i++)
+  {
     *(board+i) = '*';
-      
     if(i == columns * lines -1)
       *(board+i) = 'X';
   }
@@ -84,61 +46,61 @@ int createboard(char *player1, char *player2,  int *lines, int *columns)
     if(*columns > *lines) {
       if(*lines < 4 || *lines > 8)
         if(*columns < 6 || *columns > 10) {
-          printf("\nGame board size invalid! Number of columns and lines invalid!\nPress any key to continue");
+          printf("\nGame board size invalid! Number of columns and lines"
+                  " invalid!\nPress any key to continue");
+          getchar();
+        } else {
+          printf("\nGame board size invalid! Number of lines invalid!\n"
+                 "Press any key to continue");
           getchar();
         }
-        else {
-          printf("\nGame board size invalid! Number of lines invalid!\nPress any key to continue");
-          getchar();
-        }
-        else
-        if(*columns < 6 || *columns > 10) {
-          printf("\nGame board size invalid! Number of columns invalid!\nPress any key to continue");
-          getchar();
-        }
-        else {
-          printf("\n\t%s, do you agree with the game board size? (Y/N) ", player2);
+      else
+          if(*columns < 6 || *columns > 10) {
+            printf("\nGame board size invalid! Number of columns invalid!\n"
+                   "Press any key to continue");
+            getchar();
+          } else {
+          printf("\n\t%s, do you agree with the game board size? (Y/N) ",
+                 player2);
           scanf("%c", &confirmation);
           getchar();
-        }
+          }
     } else {
-      printf("Number of columns is less than number of lines.\nPress any key to continue");
+      printf("Number of columns is less than number of lines.\n"
+             "Press any key to continue");
       getchar();
     }
   } while((confirmation!='y' && confirmation!='Y')
-			|| *lines < 4 || *lines > 8 || *columns < 6 || *columns > 10 || *columns < *lines);
+			|| *lines < 4 || *lines > 8 || *columns < 6 || *columns > 10
+      || *columns < *lines);
   return 0;
 }
 
-int validation_play(char *board, char *winner, char *player,
-                    int x, int y, int lines, int columns, int *lose)
+int validation_play(char *board, int x, int y, int lines, int columns,
+                    int *lose)
 {
   if(x > 0 && x <= lines && y > 0 && y <=columns)
     if(*(board + ( (x - 1) * columns + y ) - 1) == 'X') {
-        *winner = *nextplayer;
         *lose = 0;
         return 0;
-        
-    } else {
+    }
+    else
       if(*(board + ( ((x - 1) * columns) + y ) - 1) == ' ')
         return 1;
-        
       else
         return 0;
-    }
   else
     return 1;
 }
 
-void play(char *board, char *player1, char *player2,
-          int lines, int columns, char *player, char *winner, int *lose)
+void play(char *board, char *player, int lines, int columns, int *lose)
 {
   int x, y, i, j;
 
   do {
     printf("%s, your turn to play (l/c): ", player);
     scanf("%d %d", &x, &y);
-  } while(validation_play(board, player, nextplayer, winner, x, y, lines, columns, lose));
+  } while(validation_play(board, x, y, lines, columns, lose));
 
   for(i = 0; i < x; i++)
     for(j = 0; j < y;j++)
@@ -148,34 +110,28 @@ void play(char *board, char *player1, char *player2,
 
 int game()
 {
-    char player1[NAME_STR_LEN], player2[NAME_STR_LEN], winner[NAME_STR_LEN];
-    int lines, columns, lose = 1, i;
-    char **board;
+  char player1[NAME_STR_LEN], player2[NAME_STR_LEN], *winner = NULL;
+  int lines, columns, lose = 1;
 
-    createboard(player1, player2, &lines, &columns);
+  createboard(player1, player2, &lines, &columns);
 
-    board = malloc(sizeof(char) * lines);
-    for (i = 0; i < lines; i++)
-        board[i] = malloc (sizeof(char) * columns);
-    
-    
-    
-    initializeboard(*board, lines, columns);
+  char board[columns][lines];
+  initializeboard(*board, lines, columns);
+  printboard(*board, lines, columns);
+
+  do {
+    play(*board, player1, lines, columns, &lose);
     printboard(*board, lines, columns);
-
-    do {
-        play(*board, player1, player2, winner, lines, columns, &lose);
-        printboard(*board, lines, columns);
-      
-        if(lose == 0) break;
-      
-        play(*board, player1, player2, lines, columns, player2, winner, &lose);
-=======
-
+    if(lose == 0) {
+      winner = player2;
+      break;
+    }
+    play(*board, player2, lines, columns, &lose);
     printboard(*board, lines, columns);
-
+    if(lose == 0)
+      winner = player1;
   } while(lose);
-    
+
   printf("%s, you are the winner!\n", winner);
   getchar();
   return 0;
@@ -187,7 +143,8 @@ int menu()
   char confirmation;
 
   do {
-    printf("\t1. New Game\n\t2. Load Last Game\n\t3. Credits\n\t4. Quit Game\nOption: ");
+    printf("\t1. New Game\n\t2. Load Last Game\n\t3. Credits\n\t4. Quit Game"
+           "\nOption: ");
     scanf("%d", &option);
     getchar();
 
@@ -197,7 +154,8 @@ int menu()
       case 2: printf("Load last game\n");
               getchar();
               break;
-      case 3: printf("Autor: Guilherme José Rodrigues Garrucho 21230252\nPress any key to continue. ");
+      case 3: printf("Autor: Guilherme José Rodrigues Garrucho 21230252"
+                     "\nPress any key to continue. ");
               getchar();
               break;
       case 4: printf("Are you sure? (Y/N)");
