@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #define NAME_STR_LEN 40
 
 void printboard(char *board, int lines, int columns)
@@ -76,16 +77,16 @@ int createboard(char *player1, char *player2,  int *lines, int *columns)
   return 0;
 }
 
-int validation_play(char *board, int x, int y, int lines, int columns,
+int validation_play(char *board, int x, char y, int lines, int columns,
                     int *lose)
 {
-  if(x > 0 && x <= lines && y > 0 && y <=columns)
-    if(*(board + ( (x - 1) * columns + y ) - 1) == 'X') {
+  if(x > 0 && x <= lines && y - 'A' + 1 > 0 && y - 'A' + 1 <= columns)
+    if(*(board + (x - 1) * columns + y - 'A') == 'X') {
         *lose = 0;
         return 0;
     }
     else
-      if(*(board + ( ((x - 1) * columns) + y ) - 1) == ' ')
+      if(*(board + (x - 1) * columns + y - 'A') == ' ')
         return 1;
       else
         return 0;
@@ -95,42 +96,64 @@ int validation_play(char *board, int x, int y, int lines, int columns,
 
 void play(char *board, char *player, int lines, int columns, int *lose)
 {
-  int x, y, i, j;
+  int x, i, j;
+  char y;
 
   do {
-    printf("%s, your turn to play (l/c): ", player);
-    scanf("%d %d", &x, &y);
+    printf("%s, your turn to play (c/l): ", player);
+    scanf(" %c %d", &y, &x);
   } while(validation_play(board, x, y, lines, columns, lose));
 
   for(i = 0; i < x; i++)
-    for(j = 0; j < y;j++)
+    for(j = 0; j < y - 'A' + 1;j++)
       if(*(board + i * columns + j) != 'X')
         *(board + i * columns + j) = ' ';
 }
 
 int game()
 {
-  char player1[NAME_STR_LEN], player2[NAME_STR_LEN], *winner = NULL;
-  int lines, columns, lose = 1;
+  char player1[NAME_STR_LEN], player2[NAME_STR_LEN], *winner = NULL, **board;
+  int i, lines, columns, lose = 1;
 
   createboard(player1, player2, &lines, &columns);
 
-  char board[columns][lines];
+  //char board[lines][columns];
+  board = malloc(lines * sizeof(char *));
+  if(board != NULL)
+    for(i = 0; i < lines; i++) {
+      board[i] = malloc(columns * sizeof(char));
+      printf("i: %d\n", i);
+      if(board[i] == NULL) {
+        printf("Allocation failed\n");
+        return 1;
+      }
+  }
+  else
+    printf("Allocation failed\n");
+  getchar();
   initializeboard(*board, lines, columns);
   printboard(*board, lines, columns);
 
   do {
     play(*board, player1, lines, columns, &lose);
     printboard(*board, lines, columns);
-    if(lose == 0) {
+    if(!lose) {
       winner = player2;
       break;
     }
     play(*board, player2, lines, columns, &lose);
     printboard(*board, lines, columns);
-    if(lose == 0)
+    if(!lose)
       winner = player1;
   } while(lose);
+
+  printf("I'm here\n");
+  for(i = 0; i < lines; i++) {
+    printf("I'm here? %p\n", board[i]);
+    free(board[i]);
+    printf("I'm here!\n");
+  }
+  free(board);
 
   printf("%s, you are the winner!\n", winner);
   getchar();
