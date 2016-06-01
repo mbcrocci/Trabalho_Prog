@@ -4,30 +4,69 @@
 #define NAME_STR_LEN 40
 
 typedef struct game_board {
-  char **board, player1[NAME_STR_LEN], player2[NAME_STR_LEN], *curr_player, play_col;
+  char  **board, player1[NAME_STR_LEN], player2[NAME_STR_LEN], *curr_player,
+        play_col;
   int nrows, ncol, play_row;
 } Board;
 
 typedef struct game_board_play {
-    char **board;
-    char player[NAME_STR_LEN];
-    int nrows, ncol, play_row, play_col;
+    char **board, player[NAME_STR_LEN], play_col;
+    int nrows, ncol, play_row;
     struct game_board_play * next;
 } play_t;
 
-void save_file(play_t * head, char *player)
+void save_file(play_t * head)
 {
+  FILE * last_game;
+  play_t * curr = head;
+  int num_play1 = 1, num_play2 = 1, num_play = 1, *num_player_play, i, j;
 
+  num_player_play = &num_play1;
+  last_game = fopen("last_game.txt", "wt");
+
+  if(last_game == NULL) {
+    printf("Error creating file!\n");
+    return;
+  }
+
+  while(curr != NULL) {
+    fprintf(last_game, "%dº play: %s's %dº play -> %c %d\n", num_play++,
+            curr->player, *num_player_play++, curr->play_col, curr->play_row);
+    fprintf(last_game, "\t\t|");
+    for(i = 0, j = 'A'; i < curr->ncol; i++)
+      fprintf(last_game, " %c |", j++);
+    for(i = 0; i < curr->nrows; i++)
+      for(j = 0; j < curr->ncol; j++) {
+        if(!j)
+          fprintf(last_game, "\n\t   | %2d |", i+1);
+        fprintf(last_game, " %c |", curr->board[i][j]);
+      }
+    fprintf(last_game, "\n\n");
+
+    if(num_play2 < num_play1)
+      num_player_play = &num_play2;
+    else
+      num_player_play = &num_play1;
+
+    curr = curr->next;
+    }
+
+  fclose(last_game);
 }
 
 void play_history(play_t *head)
 {
   int i, j;
   play_t * curr = head;
-  int num_play = 1;
+  int num_play = 1, num_play1 = 1, num_play2 = 1, *num_player_play;
+
+  num_player_play = &num_play1;
+  
   if(curr != NULL)
     while(curr != NULL) {
-      printf("Play number %d\n", num_play++);
+      printf("%dª play: %s's %dª play -> %c %d\n", num_play++, curr->player,
+              *num_player_play, curr->play_col, curr->play_row);
+
       printf("\t\t|");
       for(i = 0, j = 'A';i < curr->ncol; i++)
         printf(" %c |", j++);
@@ -37,6 +76,12 @@ void play_history(play_t *head)
           if(!j)
             printf("\n\t   | %2d |", i+1);
           printf(" %c |", curr->board[i][j]);
+
+
+      if(num_play2 < num_play1)
+        num_player_play = &num_play2;
+      else
+        num_player_play = &num_play1;
         }
       putchar('\n');
       curr = curr->next;
@@ -48,7 +93,8 @@ void play_history(play_t *head)
 void board_copy(Board game_board, play_t *new_play)
 {
   int i, j;
-
+  new_play->play_row = game_board.play_row;
+  new_play->play_col = game_board.play_col;
   new_play->nrows = game_board.nrows;
   new_play->ncol = game_board.ncol;
 
@@ -61,26 +107,22 @@ void board_copy(Board game_board, play_t *new_play)
       new_play->board[i][j] = game_board.board[i][j];
 
   strcpy(new_play->player, game_board.curr_player);
+  new_play->next = NULL;
 }
 
 void add_play(Board game_board, play_t ** head)
 {
   play_t * curr = *head;
-  printf("curr %p \nhead %p\n", curr, *head);
   play_t * new_play = (play_t *) malloc(sizeof(play_t));
 
   board_copy(game_board, new_play);
-
-  new_play->next = NULL;
 
   if(*head == NULL)
     *head = new_play;
   else {
       while(curr->next != NULL)
         curr = curr->next;
-
       curr->next = new_play;
-      //curr->next->next = NULL;
     }
 }
 
@@ -254,7 +296,7 @@ void game()
 
   printf("%s, you won!\n", settings.curr_player);
 
-  //TODO save play to file
+  save_file(head);
   free_board(&settings);
 }
 
