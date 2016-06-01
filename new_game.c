@@ -4,21 +4,102 @@
 #define NAME_STR_LEN 40
 
 typedef struct game_board {
-  char **board;
-  int nrows, ncol;
+  char **board, player1[NAME_STR_LEN], player2[NAME_STR_LEN], *curr_player, play_col;
+  int nrows, ncol, play_row;
 } Board;
 
-void set_rules(char *player1, char *player2, Board *game_board)
+typedef struct game_board_play {
+    char **board;
+    char player[NAME_STR_LEN];
+    int nrows, ncol, play_row, play_col;
+    struct game_board_play * next;
+} play_t;
+
+play_t *head = NULL;
+
+void save_file(play_t * head, char *player)
+{
+
+}
+
+void play_history(play_t *new_play)
+{
+  int i, j;
+  play_t * curr = new_play;
+  int num_play = 1;
+  if(curr != NULL)
+    while(curr != NULL) {
+      printf("Play number %d\n", num_play++);
+      printf("\t\t|");
+      for(i = 0, j = 'A';i < new_play->ncol; i++)
+        printf(" %c |", j++);
+
+      for(i = 0;i < new_play->nrows; i++)
+        for(j = 0; j < new_play->ncol; j++) {
+          if(!j)
+            printf("\n\t   | %2d |", i+1);
+          printf(" %c |", new_play->board[i][j]);
+        }
+      putchar('\n');
+      curr = curr->next;
+  }
+  else
+    printf("There's no plays yet!\n");
+}
+
+void board_copy(Board game_board, play_t *new_play)
+{
+  int i, j;
+
+  new_play->nrows = game_board.nrows;
+  new_play->ncol = game_board.ncol;
+
+  new_play->board = malloc(new_play->nrows * sizeof(char *));
+  for(i = 0; i < new_play->nrows; i++)
+    new_play->board[i] = malloc(new_play->ncol * sizeof(char));
+
+  for(i = 0; i < game_board.nrows; i++)
+    for(j = 0; j < game_board.ncol; j++)
+      new_play->board[i][j] = game_board.board[i][j];
+
+  strcpy(new_play->player, game_board.curr_player);
+}
+
+void add_play(Board game_board, play_t ** head)
+{
+  play_t * curr;
+  printf("curr %p \nhead %p\n", curr, head);
+  play_t * new_play = (play_t *) malloc(sizeof(play_t));
+
+  board_copy(game_board, new_play);
+
+  new_play->next = NULL;
+
+  if(curr == NULL)
+    curr = new_play;
+  else
+      while(curr->next != NULL) {
+        curr = curr->next;
+
+      curr->next = new_play;
+      curr->next->next = NULL;
+    }
+}
+
+void set_rules(Board *game_board)
 {
   char confirmation='n';
 
   printf("Player 1, please insert your name: ");
-  scanf("%s", player1);
+  scanf("%s", game_board->player1);
   printf("Player 2, please insert your name: ");
-  scanf("%s", player2);
+  scanf("%s", game_board->player2);
+
+  game_board->curr_player = game_board->player1;
 
   do {
-    printf("\t%s, insert the size of the game board.\nLines: ", player1);
+    printf("\t%s, insert the size of the game board.\nLines: ",
+           game_board->player1);
     scanf("%d", &(game_board->nrows));
     printf("Columns: ");
     scanf("%d", &(game_board->ncol));
@@ -42,7 +123,7 @@ void set_rules(char *player1, char *player2, Board *game_board)
             getchar();
           } else {
           printf("\n\t%s, do you agree with the game board size? (Y/N) ",
-                 player2);
+                 game_board->player2);
           scanf("%c", &confirmation);
           getchar();
           }
@@ -118,48 +199,63 @@ int validation(Board *game_board, int play_row, int play_col, int *keep_play)
     return 1;
 }
 
-void play(Board *game_board, char *player, int *keep_play)
+void play(Board *game_board, int *keep_play)
 {
-  int play_row, end_row, end_col, i, j;
-  char play_col;
+  int end_row, end_col, i, j;
 
   do {
-    printf("%s, your turn to play (c/l): ", player);
-    scanf(" %c %d", &play_col, &play_row);
-    end_row = play_row - 1;
-    end_col = play_col - 'A';
+    printf("%s, your turn to play (c/l): ", game_board->curr_player);
+    scanf(" %c %d", &(game_board->play_col), &(game_board->play_row));
+
+    end_row = game_board->play_row - 1;
+    end_col = game_board->play_col - 'A';
   } while(validation(game_board, end_row, end_col, keep_play));
 
   for(i = 0; i <= end_row; i++)
     for(j = 0; j <= end_col; j++)
-      (game_board->board[i][j]) = ' ';
+      game_board->board[i][j] = ' ';
+}
 
-  //TODO save play to file
+void menu_game(int *option)
+{
+  printf("1. New Play\n2. Play history\n");
+  scanf("%d", option);
+}
+
+void change_player(Board *settings)
+{
+      if(!strcmp(settings->curr_player, settings->player1))
+        settings->curr_player = settings->player2;
+      else
+        settings->curr_player = settings->player1;
 }
 
 void game()
 {
-  Board game_board;
-  char player1[NAME_STR_LEN], player2[NAME_STR_LEN], *curr_player = player1;
-  int keep_play = 1;
+  Board settings;
+  int keep_play = 1, option;
 
-  set_rules(player1, player2, &game_board);
-  create_board(&game_board);
+  set_rules(&settings);
+  create_board(&settings);
 
-  print_board(game_board);
+  print_board(settings);
   do {
+    menu_game(&option);
 
-    play(&game_board, curr_player, &keep_play);
-    print_board(game_board);
-
-    if(!strcmp(curr_player, player1))
-      curr_player = player2;
-    else
-      curr_player = player1;
+    if(option == 1) {
+      play(&settings, &keep_play);
+      add_play(settings, &head);
+      print_board(settings);
+      change_player(&settings);
+    } else {
+      play_history(head);
+    }
   } while(keep_play);
-  printf("%s, you won!\n", curr_player);
 
-  free_board(&game_board);
+  printf("%s, you won!\n", settings.curr_player);
+
+  //TODO save play to file
+  free_board(&settings);
 }
 
 void menu()
