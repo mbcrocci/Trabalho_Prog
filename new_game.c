@@ -15,30 +15,28 @@ typedef struct game_board_play {
     struct game_board_play * next;
 } play_t;
 
-play_t *head = NULL;
-
 void save_file(play_t * head, char *player)
 {
 
 }
 
-void play_history(play_t *new_play)
+void play_history(play_t *head)
 {
   int i, j;
-  play_t * curr = new_play;
+  play_t * curr = head;
   int num_play = 1;
   if(curr != NULL)
     while(curr != NULL) {
       printf("Play number %d\n", num_play++);
       printf("\t\t|");
-      for(i = 0, j = 'A';i < new_play->ncol; i++)
+      for(i = 0, j = 'A';i < curr->ncol; i++)
         printf(" %c |", j++);
 
-      for(i = 0;i < new_play->nrows; i++)
-        for(j = 0; j < new_play->ncol; j++) {
+      for(i = 0;i < curr->nrows; i++)
+        for(j = 0; j < curr->ncol; j++) {
           if(!j)
             printf("\n\t   | %2d |", i+1);
-          printf(" %c |", new_play->board[i][j]);
+          printf(" %c |", curr->board[i][j]);
         }
       putchar('\n');
       curr = curr->next;
@@ -67,22 +65,22 @@ void board_copy(Board game_board, play_t *new_play)
 
 void add_play(Board game_board, play_t ** head)
 {
-  play_t * curr;
-  printf("curr %p \nhead %p\n", curr, head);
+  play_t * curr = *head;
+  printf("curr %p \nhead %p\n", curr, *head);
   play_t * new_play = (play_t *) malloc(sizeof(play_t));
 
   board_copy(game_board, new_play);
 
   new_play->next = NULL;
 
-  if(curr == NULL)
-    curr = new_play;
-  else
-      while(curr->next != NULL) {
+  if(*head == NULL)
+    *head = new_play;
+  else {
+      while(curr->next != NULL)
         curr = curr->next;
 
       curr->next = new_play;
-      curr->next->next = NULL;
+      //curr->next->next = NULL;
     }
 }
 
@@ -233,6 +231,7 @@ void change_player(Board *settings)
 void game()
 {
   Board settings;
+  play_t *head = NULL;
   int keep_play = 1, option;
 
   set_rules(&settings);
@@ -248,6 +247,7 @@ void game()
       print_board(settings);
       change_player(&settings);
     } else {
+      printf("head: %p \n", head);
       play_history(head);
     }
   } while(keep_play);
