@@ -35,7 +35,7 @@
 *.txt
 
 # gdb file
-.gdb_history
+*.gdb_history
 
 # Binary files
-.dat
+*.dat
