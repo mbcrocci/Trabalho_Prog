@@ -6,7 +6,7 @@
 typedef struct game_board {
   char  **board, player1[NAME_STR_LEN], player2[NAME_STR_LEN], *curr_player,
         play_col;
-  int nrows, ncol, play_row;
+  int nrows, ncol, play_row, num_play;
 } Board;
 
 typedef struct game_board_play {
@@ -50,7 +50,6 @@ void save_file(play_t * head)
 
     curr = curr->next;
     }
-
   fclose(last_game);
 }
 
@@ -61,7 +60,7 @@ void play_history(play_t *head)
   int num_play = 1, num_play1 = 1, num_play2 = 1, *num_player_play;
 
   num_player_play = &num_play1;
-  
+
   if(curr != NULL)
     while(curr != NULL) {
       printf("%dª play: %s's %dª play -> %c %d\n", num_play++, curr->player,
@@ -93,6 +92,7 @@ void play_history(play_t *head)
 void board_copy(Board game_board, play_t *new_play)
 {
   int i, j;
+
   new_play->play_row = game_board.play_row;
   new_play->play_col = game_board.play_col;
   new_play->nrows = game_board.nrows;
@@ -149,7 +149,7 @@ void set_rules(Board *game_board)
       if(game_board->nrows < 4 || game_board->nrows > 8)
         if(game_board->ncol < 6 || game_board->ncol > 10) {
           printf("\nGame board size invalid! Number of columns and rows"
-                  " invalid!\nPress any key to continue");
+                 " invalid!\nPress any key to continue");
           getchar();
         } else {
           printf("\nGame board size invalid! Number of rows invalid!\n"
@@ -173,8 +173,8 @@ void set_rules(Board *game_board)
       getchar();
     }
   } while((confirmation!='y' && confirmation!='Y')
-			|| game_board->nrows < 4 || game_board->nrows > 8 || game_board->ncol < 6 || game_board->ncol > 10
-      || game_board->ncol < game_board->nrows);
+			|| game_board->nrows < 4 || game_board->nrows > 8 || game_board->ncol < 6
+      || game_board->ncol > 10 || game_board->ncol < game_board->nrows);
 }
 
 void create_board(Board *game_board)
@@ -191,6 +191,7 @@ void create_board(Board *game_board)
         game_board->board[i][j] = 'X';
     }
 
+  game_board->num_play = 0;
 }
 
 void free_board(Board *game_board)
@@ -251,6 +252,8 @@ void play(Board *game_board, int *keep_play)
     end_col = game_board->play_col - 'A';
   } while(validation(game_board, end_row, end_col, keep_play));
 
+  game_board->num_play++;
+
   for(i = 0; i <= end_row; i++)
     for(j = 0; j <= end_col; j++)
       game_board->board[i][j] = ' ';
@@ -258,7 +261,7 @@ void play(Board *game_board, int *keep_play)
 
 void menu_game(int *option)
 {
-  printf("1. New Play\n2. Play history\n");
+  printf("1. New Play\n2. Play history\n3. Save and quit game\n");
   scanf("%d", option);
 }
 
@@ -270,7 +273,24 @@ void change_player(Board *settings)
         settings->curr_player = settings->player1;
 }
 
-void game()
+void save_game(Board * settings, play_t * head)
+{
+  FILE * settings_file;
+  play_t * curr = head;
+  settings_file = fopen("last_settings.dat", "wb");
+
+  fwrite(&settings->nrows, sizeof (int), 1, settings_file);
+  fwrite(&settings->ncol, sizeof (int), 1, settings_file);
+  fwrite(settings, sizeof (Board), 1, settings_file);
+
+  while(curr != NULL) {
+    fwrite(curr, sizeof (play_t), 1, settings_file);
+    curr = curr->next;
+  }
+  fclose(settings_file);
+}
+
+void game_players()
 {
   Board settings;
   play_t *head = NULL;
@@ -283,21 +303,123 @@ void game()
   do {
     menu_game(&option);
 
-    if(option == 1) {
-      play(&settings, &keep_play);
-      add_play(settings, &head);
-      print_board(settings);
-      change_player(&settings);
-    } else {
-      printf("head: %p \n", head);
-      play_history(head);
+    switch(option)
+    {
+      case 1:
+        play(&settings, &keep_play);
+        add_play(settings, &head);
+        print_board(settings);
+        change_player(&settings);
+        break;
+      case 2:
+        play_history(head);
+        break;
+      case 3:
+        save_game(&settings, head);
+        keep_play = 0;
+        break;
+      default:
+        printf("Invalid Option!\nPress any key to continue.");
+        getchar();
+        break;
     }
   } while(keep_play);
 
-  printf("%s, you won!\n", settings.curr_player);
+  if(option == 1)
+    printf("%s, you won!\n", settings.curr_player);
 
   save_file(head);
   free_board(&settings);
+}
+
+void load_settings(FILE * old_settings, Board * settings, play_t ** head )
+{
+  play_t * curr, * play_node;
+  int i, nrows, ncol;
+
+  fread(&nrows, sizeof (int), 1, old_settings);
+  settings->nrows = nrows;
+  fread(&ncol, sizeof (int), 1, old_settings);
+  settings->ncol = ncol;
+
+  settings->board = malloc(settings->nrows * sizeof (char *));
+  for(i = 0; i < settings->nrows; i++)
+    settings->board[i] = malloc(settings->ncol * sizeof (char));
+
+  fread(settings, sizeof (Board), 1, old_settings);
+
+  *head = malloc(sizeof (play_t *));
+  fread(head, sizeof (play_t), 1, old_settings);
+  curr = *head;
+
+  for(i = 1; i < settings->num_play; i++) {
+    play_node = (play_t *) malloc(sizeof (play_t));
+    fread(play_node, sizeof (play_t), 1, old_settings);
+    curr->next = play_node;
+    curr = play_node;
+  }
+
+}
+
+void load_game(Board * settings, play_t **head)
+{
+  FILE * old_settings;
+  play_t * curr;
+  old_settings = fopen("last_settings.dat", "rb");
+
+  load_settings(old_settings, settings, head);
+
+  curr = *head;
+  while(curr->next !=NULL)
+    curr = curr->next;
+
+  if(!strcmp(curr->player, settings->player1))
+    settings->curr_player = settings->player1;
+  else
+    settings->curr_player = settings->player2;
+
+  fclose(old_settings);
+}
+
+void restart_game()
+{
+  Board settings;
+  play_t *head = NULL;
+  int keep_play = 1, option;
+
+  load_game(&settings, &head);
+
+  print_board(settings);
+  do {
+    menu_game(&option);
+
+    switch(option)
+    {
+      case 1:
+        play(&settings, &keep_play);
+        add_play(settings, &head);
+        print_board(settings);
+        change_player(&settings);
+        break;
+      case 2:
+        play_history(head);
+        break;
+      case 3:
+        save_game(&settings, head);
+        keep_play = 0;
+        break;
+      default:
+        printf("Invalid Option!\nPress any key to continue.");
+        getchar();
+        break;
+    }
+  } while(keep_play);
+  if(option == 1)
+    printf("%s, you won!\n\n", settings.curr_player);
+
+  save_file(head);
+  free_board(&settings);
+
 }
 
 void menu()
@@ -312,10 +434,10 @@ void menu()
     getchar();
 
     switch(option) {
-      case 1: game();
+      case 1: game_players();
               break;
       case 2: printf("Load last game\n");
-              getchar();
+              restart_game();
               break;
       case 3: printf("Autor: Guilherme José Rodrigues Garrucho 21230252"
                      "\nPress any key to continue. ");
