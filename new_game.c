@@ -10,7 +10,7 @@ typedef struct game_board {
 } Board;
 
 typedef struct game_board_play {
-    char **board, player[NAME_STR_LEN], play_col;
+    char **board, pfflayer[NAME_STR_LEN], play_col;
     int nrows, ncol, play_row;
     struct game_board_play * next;
 } play_t;

@@ -36,3 +36,6 @@
 
 # gdb file
 .gdb_history
+
+# Binary files
+.dat
