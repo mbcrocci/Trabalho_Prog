@@ -30,3 +30,12 @@
 
 # Debug files
 *.dSYM/
+
+# Text files
+*.txt
+
+# gdb file
+*.gdb_history
+
+# Binary files
+*.dat
