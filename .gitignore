@@ -39,3 +39,6 @@
 
 # Binary files
 *.dat
+
+# Test c files
+test*
