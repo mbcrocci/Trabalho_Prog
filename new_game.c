@@ -31,7 +31,7 @@ void save_file(play_t * head)
 
   while(curr != NULL) {
     fprintf(last_game, "%dº play: %s's %dº play -> %c %d\n", num_play++,
-            curr->player, *num_player_play++, curr->play_col, curr->play_row);
+            curr->player, (*num_player_play)++, curr->play_col, curr->play_row);
     fprintf(last_game, "\t\t|");
     for(i = 0, j = 'A'; i < curr->ncol; i++)
       fprintf(last_game, " %c |", j++);
@@ -64,7 +64,7 @@ void play_history(play_t *head)
   if(curr != NULL)
     while(curr != NULL) {
       printf("%dª play: %s's %dª play -> %c %d\n", num_play++, curr->player,
-              *num_player_play, curr->play_col, curr->play_row);
+              (*num_player_play)++, curr->play_col, curr->play_row);
 
       printf("\t\t|");
       for(i = 0, j = 'A';i < curr->ncol; i++)
@@ -162,10 +162,14 @@ void set_rules(Board *game_board)
                    "Press any key to continue");
             getchar();
           } else {
-          printf("\n\t%s, do you agree with the game board size? (Y/N) ",
-                 game_board->player2);
-          scanf("%c", &confirmation);
-          getchar();
+            printf("\n\t%s, do you agree with the game board size? (Y/N) ",
+               game_board->player2);
+            do {
+
+              scanf("%c", &confirmation);
+               getchar();
+          } while(confirmation != 'Y' && confirmation != 'y'
+                  && confirmation != 'N' && confirmation != 'n');
           }
     } else {
       printf("Number of columns is less than number of rows.\n"
@@ -175,6 +179,7 @@ void set_rules(Board *game_board)
   } while((confirmation!='y' && confirmation!='Y')
 			|| game_board->nrows < 4 || game_board->nrows > 8 || game_board->ncol < 6
       || game_board->ncol > 10 || game_board->ncol < game_board->nrows);
+  game_board->num_play = 0;
 }
 
 void create_board(Board *game_board)
@@ -190,8 +195,6 @@ void create_board(Board *game_board)
       if(i == game_board->nrows - 1 && j == game_board->ncol - 1)
         game_board->board[i][j] = 'X';
     }
-
-  game_board->num_play = 0;
 }
 
 void free_board(Board *game_board)
@@ -206,7 +209,7 @@ void print_board(Board game_board)
 {
   int i, j;
 
-  printf("\t\t|");
+  printf("\n\n\t\t|");
   for(i = 0, j = 'A';i < game_board.ncol; i++)
     printf(" %c |", j++);
 
@@ -248,20 +251,22 @@ void play(Board *game_board, int *keep_play)
     printf("%s, your turn to play (c/l): ", game_board->curr_player);
     scanf(" %c %d", &(game_board->play_col), &(game_board->play_row));
 
+
     end_row = game_board->play_row - 1;
     end_col = game_board->play_col - 'A';
   } while(validation(game_board, end_row, end_col, keep_play));
 
   game_board->num_play++;
-
+  printf("Num play = %d\n", game_board->num_play);
   for(i = 0; i <= end_row; i++)
     for(j = 0; j <= end_col; j++)
       game_board->board[i][j] = ' ';
 }
 
-void menu_game(int *option)
+void menu_game(Board settings, int *option)
 {
-  printf("1. New Play\n2. Play history\n3. Save and quit game\n");
+  printf("%s, your turn to play:\n\n1. New Play\n2. Play history\n"
+         "3. Save and quit game\n", settings.curr_player);
   scanf("%d", option);
 }
 
@@ -277,16 +282,22 @@ void save_game(Board * settings, play_t * head)
 {
   FILE * settings_file;
   play_t * curr = head;
+  int i;
+
   settings_file = fopen("last_settings.dat", "wb");
 
-  fwrite(&settings->nrows, sizeof (int), 1, settings_file);
-  fwrite(&settings->ncol, sizeof (int), 1, settings_file);
   fwrite(settings, sizeof (Board), 1, settings_file);
+
+  for(i = 0; i < settings->nrows; i++)
+    fwrite(settings->board[i], sizeof (char), settings->ncol, settings_file);
 
   while(curr != NULL) {
     fwrite(curr, sizeof (play_t), 1, settings_file);
+    for(i = 0; i < curr->nrows; i++)
+      fwrite(curr->board[i], sizeof (char), curr->ncol, settings_file);
     curr = curr->next;
   }
+
   fclose(settings_file);
 }
 
@@ -299,9 +310,9 @@ void game_players()
   set_rules(&settings);
   create_board(&settings);
 
-  print_board(settings);
   do {
-    menu_game(&option);
+    print_board(settings);
+    menu_game(settings, &option);
 
     switch(option)
     {
@@ -335,29 +346,43 @@ void game_players()
 void load_settings(FILE * old_settings, Board * settings, play_t ** head )
 {
   play_t * curr, * play_node;
-  int i, nrows, ncol;
-
-  fread(&nrows, sizeof (int), 1, old_settings);
-  settings->nrows = nrows;
-  fread(&ncol, sizeof (int), 1, old_settings);
-  settings->ncol = ncol;
-
-  settings->board = malloc(settings->nrows * sizeof (char *));
-  for(i = 0; i < settings->nrows; i++)
-    settings->board[i] = malloc(settings->ncol * sizeof (char));
+  int i, j;
 
   fread(settings, sizeof (Board), 1, old_settings);
+  create_board(settings);
 
-  *head = malloc(sizeof (play_t *));
-  fread(head, sizeof (play_t), 1, old_settings);
+  for(i = 0; i < settings->nrows; i++)
+    fread(settings->board[i], sizeof (char), settings->ncol, old_settings);
+
+  *head = (play_t *) malloc(sizeof (play_t));
   curr = *head;
+
+  fread(curr, sizeof (play_t), 1, old_settings);
+
+  curr->board = malloc(curr->nrows * sizeof(char *));
+  for(i = 0; i < curr->nrows; i++)
+    curr->board[i] = malloc(curr->ncol * sizeof(char));
+
+  for(i = 0; i < curr->nrows; i++)
+    fread(curr->board[i], sizeof (char), curr->ncol, old_settings);
+
 
   for(i = 1; i < settings->num_play; i++) {
     play_node = (play_t *) malloc(sizeof (play_t));
     fread(play_node, sizeof (play_t), 1, old_settings);
+
+    play_node->board = malloc(play_node->nrows * sizeof (char *));
+    for(j = 0; j < play_node->nrows; j++)
+      play_node->board[i] = malloc(play_node->ncol * sizeof(char));
+
+    for(j = 0; j < play_node->nrows; j++)
+      fread(play_node->board[i], sizeof (char), play_node->ncol, old_settings);
+
     curr->next = play_node;
     curr = play_node;
   }
+
+  curr->next = NULL;
 
 }
 
@@ -388,10 +413,9 @@ void restart_game()
   int keep_play = 1, option;
 
   load_game(&settings, &head);
-
-  print_board(settings);
   do {
-    menu_game(&option);
+    print_board(settings);
+    menu_game(settings, &option);
 
     switch(option)
     {
