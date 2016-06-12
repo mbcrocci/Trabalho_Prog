@@ -354,36 +354,25 @@ void load_settings(FILE * old_settings, Board * settings, play_t ** head )
   for(i = 0; i < settings->nrows; i++)
     fread(settings->board[i], sizeof (char), settings->ncol, old_settings);
 
+  // Linked list reload
   *head = (play_t *) malloc(sizeof (play_t));
   curr = *head;
 
-  fread(curr, sizeof (play_t), 1, old_settings);
+  for(i = 0; i < settings->num_play; i++) {
+    fread(curr, sizeof (play_t), 1, old_settings);
 
-  curr->board = malloc(curr->nrows * sizeof(char *));
-  for(i = 0; i < curr->nrows; i++)
-    curr->board[i] = malloc(curr->ncol * sizeof(char));
+    curr->board = malloc(curr->nrows * sizeof (char *));
+    for(j = 0; j < curr->nrows; j++)
+      curr->board[j] = malloc(curr->ncol * sizeof (char));
 
-  for(i = 0; i < curr->nrows; i++)
-    fread(curr->board[i], sizeof (char), curr->ncol, old_settings);
+    for(j = 0; j < curr->nrows; j++)
+      fread(curr->board[j], sizeof (char), curr->ncol, old_settings);
 
-
-  for(i = 1; i < settings->num_play; i++) {
-    play_node = (play_t *) malloc(sizeof (play_t));
-    fread(play_node, sizeof (play_t), 1, old_settings);
-
-    play_node->board = malloc(play_node->nrows * sizeof (char *));
-    for(j = 0; j < play_node->nrows; j++)
-      play_node->board[i] = malloc(play_node->ncol * sizeof(char));
-
-    for(j = 0; j < play_node->nrows; j++)
-      fread(play_node->board[i], sizeof (char), play_node->ncol, old_settings);
-
-    curr->next = play_node;
-    curr = play_node;
+    curr->next = malloc(sizeof (play_t));
+    curr = curr->next;
   }
-
-  curr->next = NULL;
-
+  free(curr);
+  curr = NULL;
 }
 
 void load_game(Board * settings, play_t **head)
