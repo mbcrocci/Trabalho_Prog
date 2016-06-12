@@ -319,7 +319,6 @@ void game_players()
       case 1:
         play(&settings, &keep_play);
         add_play(settings, &head);
-        print_board(settings);
         change_player(&settings);
         break;
       case 2:
@@ -345,7 +344,7 @@ void game_players()
 
 void load_settings(FILE * old_settings, Board * settings, play_t ** head )
 {
-  play_t * curr, * play_node;
+  play_t * curr, * aux;
   int i, j;
 
   fread(settings, sizeof (Board), 1, old_settings);
@@ -368,11 +367,13 @@ void load_settings(FILE * old_settings, Board * settings, play_t ** head )
     for(j = 0; j < curr->nrows; j++)
       fread(curr->board[j], sizeof (char), curr->ncol, old_settings);
 
+    aux = curr;
     curr->next = malloc(sizeof (play_t));
     curr = curr->next;
+
   }
   free(curr);
-  curr = NULL;
+  aux->next = NULL;
 }
 
 void load_game(Board * settings, play_t **head)
@@ -388,9 +389,9 @@ void load_game(Board * settings, play_t **head)
     curr = curr->next;
 
   if(!strcmp(curr->player, settings->player1))
-    settings->curr_player = settings->player1;
-  else
     settings->curr_player = settings->player2;
+  else
+    settings->curr_player = settings->player1;
 
   fclose(old_settings);
 }
@@ -411,7 +412,6 @@ void restart_game()
       case 1:
         play(&settings, &keep_play);
         add_play(settings, &head);
-        print_board(settings);
         change_player(&settings);
         break;
       case 2:
@@ -435,6 +435,26 @@ void restart_game()
 
 }
 
+void gamebot() {
+  printf("RUST\n");
+}
+
+void menu_gametype()
+{
+  int option;
+  do {
+    printf("1. Human vs Human\n2. Human vs Bot\n");
+    scanf("%d", &option);
+
+    switch(option) {
+      case 1: game_players();
+              break;
+      case 2: gamebot();
+              break;
+    }
+  }while(option != 1 && option != 2);
+}
+
 void menu()
 {
   int option;
@@ -447,7 +467,7 @@ void menu()
     getchar();
 
     switch(option) {
-      case 1: game_players();
+      case 1: menu_gametype();
               break;
       case 2: printf("Load last game\n");
               restart_game();
