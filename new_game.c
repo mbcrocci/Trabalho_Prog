@@ -3,16 +3,16 @@
 #include <string.h>
 #define NAME_STR_LEN 40
 
-typedef struct game_board {
+typedef struct game_settings {
   char  **board, player1[NAME_STR_LEN], player2[NAME_STR_LEN], *curr_player,
         play_col;
   int nrows, ncol, play_row, num_play, new_rule_p1, new_rule_p2;
 } Board;
 
-typedef struct game_board_play {
+typedef struct game_play {
     char **board, player[NAME_STR_LEN], play_col;
     int nrows, ncol, play_row, new_rule_tag;
-    struct game_board_play * next;
+    struct game_play * next;
 } play_t;
 
 void save_file(play_t * head)
@@ -62,7 +62,7 @@ void save_file(play_t * head)
   fclose(last_game);
 }
 
-void play_history(play_t *head)
+void play_history(play_t * head)
 {
   int i, j;
   play_t * curr = head;
@@ -103,45 +103,49 @@ void play_history(play_t *head)
     printf("There's no plays yet!\n");
 }
 
-void board_copy(Board settings, play_t *new_play)
+void board_copy(Board * settings, play_t * new_play)
 {
   int i, j;
 
-  new_play->play_row = settings.play_row;
-  new_play->play_col = settings.play_col;
-  new_play->nrows = settings.nrows;
-  new_play->ncol = settings.ncol;
+  new_play->play_row = settings->play_row;
+  new_play->play_col = settings->play_col;
+  new_play->nrows = settings->nrows;
+  new_play->ncol = settings->ncol;
 
   new_play->board = malloc(new_play->nrows * sizeof(char *));
   for(i = 0; i < new_play->nrows; i++)
     new_play->board[i] = malloc(new_play->ncol * sizeof(char));
 
-  for(i = 0; i < settings.nrows; i++)
-    for(j = 0; j < settings.ncol; j++)
-      new_play->board[i][j] = settings.board[i][j];
+  for(i = 0; i < settings->nrows; i++)
+    for(j = 0; j < settings->ncol; j++)
+      new_play->board[i][j] = settings->board[i][j];
 
-  strcpy(new_play->player, settings.curr_player);
+  strcpy(new_play->player, settings->curr_player);
 
-  if(!strcmp(settings.curr_player, settings.player1))
-    if(settings.new_rule_p1 == 1)
+  if(!strcmp(settings->curr_player, settings->player1))
+    if(settings->new_rule_p1 == 1) {
       new_play->new_rule_tag = 1;
+      settings->new_rule_p1 = -1;
+    }
     else
       new_play->new_rule_tag = 0;
   else
-    if(settings.new_rule_p2 == 1)
+    if(settings->new_rule_p2 == 1) {
       new_play->new_rule_tag = 1;
+      settings->new_rule_p2 = -1;
+    }
     else
       new_play->new_rule_tag = 0;
 
   new_play->next = NULL;
 }
 
-void add_play(Board game_board, play_t ** head)
+void add_play(Board * settings, play_t ** head)
 {
   play_t * curr = *head;
   play_t * new_play = (play_t *) malloc(sizeof(play_t));
 
-  board_copy(game_board, new_play);
+  board_copy(settings, new_play);
 
   if(*head == NULL)
     *head = new_play;
@@ -152,29 +156,28 @@ void add_play(Board game_board, play_t ** head)
     }
 }
 
-
-void set_rules(Board *game_board)
+void set_rules(Board * settings)
 {
   char confirmation='n';
 
   printf("Player 1, please insert your name: ");
-  scanf("%s", game_board->player1);
+  scanf("%s", settings->player1);
   printf("Player 2, please insert your name: ");
-  scanf("%s", game_board->player2);
+  scanf("%s", settings->player2);
 
-  game_board->curr_player = game_board->player1;
+  settings->curr_player = settings->player1;
 
   do {
     printf("\t%s, insert the size of the game board.\nLines: ",
-           game_board->player1);
-    scanf("%d", &(game_board->nrows));
+           settings->player1);
+    scanf("%d", &(settings->nrows));
     printf("Columns: ");
-    scanf("%d", &(game_board->ncol));
+    scanf("%d", &(settings->ncol));
     getchar();
 
-    if(game_board->ncol > game_board->nrows) {
-      if(game_board->nrows < 4 || game_board->nrows > 8)
-        if(game_board->ncol < 6 || game_board->ncol > 10) {
+    if(settings->ncol > settings->nrows) {
+      if(settings->nrows < 4 || settings->nrows > 8)
+        if(settings->ncol < 6 || settings->ncol > 10) {
           printf("\nGame board size invalid! Number of columns and rows"
                  " invalid!\nPress any key to continue");
           getchar();
@@ -184,13 +187,13 @@ void set_rules(Board *game_board)
           getchar();
         }
       else
-          if(game_board->ncol < 6 || game_board->ncol > 10) {
+          if(settings->ncol < 6 || settings->ncol > 10) {
             printf("\nGame board size invalid! Number of columns invalid!\n"
                    "Press any key to continue");
             getchar();
           } else {
             printf("\n\t%s, do you agree with the game board size? (Y/N) ",
-               game_board->player2);
+               settings->player2);
             do {
 
               scanf("%c", &confirmation);
@@ -204,26 +207,27 @@ void set_rules(Board *game_board)
       getchar();
     }
   } while((confirmation!='y' && confirmation!='Y')
-			|| game_board->nrows < 4 || game_board->nrows > 8 || game_board->ncol < 6
-      || game_board->ncol > 10 || game_board->ncol < game_board->nrows);
+			|| settings->nrows < 4 || settings->nrows > 8 || settings->ncol < 6
+      || settings->ncol > 10 || settings->ncol < settings->nrows);
 
-  game_board->num_play = 0;
-  game_board->new_rule_p1 = 0;
-  game_board->new_rule_p2 = 0;
+  settings->num_play = 0;
+  settings->new_rule_p1 = 0;
+  settings->new_rule_p2 = 0;
 }
 
-void create_board(Board *game_board)
+void create_board(Board * settings)
 {
   int i, j;
-  game_board->board = malloc(game_board->nrows * sizeof(char *));
-  for(i = 0;i < game_board->nrows; i++)
-    game_board->board[i] = malloc(game_board->ncol * sizeof(char));
 
-  for(i = 0;i < game_board->nrows; i++)
-    for(j = 0;j < game_board->ncol; j++) {
-      game_board->board[i][j] = '*';
-      if(i == game_board->nrows - 1 && j == game_board->ncol - 1)
-        game_board->board[i][j] = 'X';
+  settings->board = malloc(settings->nrows * sizeof(char *));
+  for(i = 0;i < settings->nrows; i++)
+    settings->board[i] = malloc(settings->ncol * sizeof(char));
+
+  for(i = 0;i < settings->nrows; i++)
+    for(j = 0;j < settings->ncol; j++) {
+      settings->board[i][j] = '*';
+      if(i == settings->nrows - 1 && j == settings->ncol - 1)
+        settings->board[i][j] = 'X';
     }
 }
 
@@ -249,62 +253,61 @@ void free_game_mem(Board *settings, play_t ** head)
   }
 }
 
-void print_board(Board game_board)
+void print_board(Board settings)
 {
   int i, j;
 
   printf("\n\n\t\t|");
-  for(i = 0, j = 'A';i < game_board.ncol; i++)
+  for(i = 0, j = 'A';i < settings.ncol; i++)
     printf(" %c |", j++);
 
-  for(i = 0;i < game_board.nrows; i++)
-    for(j = 0; j < game_board.ncol; j++) {
+  for(i = 0;i < settings.nrows; i++)
+    for(j = 0; j < settings.ncol; j++) {
       if(!j)
         printf("\n\t   | %2d |", i+1);
-      printf(" %c |", game_board.board[i][j]);
+      printf(" %c |", settings.board[i][j]);
     }
   putchar('\n');
 }
 
-int get_pos(Board *game_board, int play_row, int play_col)
+int get_pos(Board * settings, int play_row, int play_col)
 {
-  return game_board->board[play_row][play_col];
+  return settings->board[play_row][play_col];
 }
 
-int validation(Board *game_board, int play_row, int play_col, int *keep_play)
+int validation(Board * settings, int play_row, int play_col, int *keep_play)
 {
-  if(play_row >= 0 && play_row < game_board->nrows && play_col >= 0 &&
-     play_col < game_board->ncol)
-    if(get_pos(game_board, play_row, play_col) == 'X') {
+  if(play_row >= 0 && play_row < settings->nrows && play_col >= 0 &&
+     play_col < settings->ncol)
+    if(get_pos(settings, play_row, play_col) == 'X') {
       *keep_play = 0;
       return 0;
     } else
-      if(get_pos(game_board, play_row, play_col) == ' ')
-        return 1;
-      else
-        return 0;
+        if(get_pos(settings, play_row, play_col) == ' ')
+          return 1;
+        else
+          return 0;
   else
     return 1;
 }
 
-void play(Board *game_board, int *keep_play)
+void play(Board *settings, int *keep_play)
 {
   int end_row, end_col, i, j;
 
   do {
-    printf("%s, your turn to play (c/l): ", game_board->curr_player);
-    scanf(" %c %d", &(game_board->play_col), &(game_board->play_row));
+    printf("%s, your turn to play (c/l): ", settings->curr_player);
+    scanf(" %c %d", &(settings->play_col), &(settings->play_row));
 
+    end_row = settings->play_row - 1;
+    end_col = settings->play_col - 'A';
+  }while(validation(settings, end_row, end_col, keep_play));
 
-    end_row = game_board->play_row - 1;
-    end_col = game_board->play_col - 'A';
-  } while(validation(game_board, end_row, end_col, keep_play));
-
-  game_board->num_play++;
+  settings->num_play++;
 
   for(i = 0; i <= end_row; i++)
     for(j = 0; j <= end_col; j++)
-      game_board->board[i][j] = ' ';
+      settings->board[i][j] = ' ';
 }
 
 void new_rule(Board * settings)
@@ -314,9 +317,12 @@ void new_rule(Board * settings)
     settings->board[settings->nrows - 1][settings->ncol - 1] = '*';
     settings->nrows++;
     settings->ncol++;
-    settings->board = realloc (settings->board ,settings->nrows * sizeof (char *));
+
+    settings->board = realloc (settings->board ,
+                               settings->nrows * sizeof (char *));
     for(i = 0; i < settings->nrows; i++)
-      settings->board[i] = realloc(settings->board[i], settings->ncol * sizeof (char));
+      settings->board[i] = realloc(settings->board[i],
+                                   settings->ncol * sizeof (char));
 
     for(i = 0; i < settings->ncol; i++)
       settings->board[settings->nrows - 1][i] = '*';
@@ -332,7 +338,8 @@ void new_rule(Board * settings)
         settings->new_rule_p2++;
 }
 
-void validation_new_rule(Board * settings) {
+void validation_new_rule(Board * settings)
+{
   if(!strcmp(settings->curr_player, settings->player1))
     if(settings->new_rule_p1 == 0)
       new_rule(settings);
@@ -349,14 +356,6 @@ void validation_new_rule(Board * settings) {
         getchar();
         printf("\n\n");
       }
-}
-
-void menu_game(Board settings, int *option)
-{
-  printf("\n%s, your turn to play:\n\n1. New Play\n2. Increase gameboard size\n"
-         "3. Play history\n4. Save and quit game\n"
-         , settings.curr_player);
-  scanf("%d", option);
 }
 
 void change_player(Board *settings)
@@ -390,6 +389,20 @@ void save_game(Board * settings, play_t * head)
   fclose(settings_file);
 }
 
+void menu_game(Board settings, int *option)
+{
+
+    printf("\n%s, your turn to play:\n\n1. New Play\n2. Increase gameboard size\n"
+           "3. Play history\n4. Save and quit game\nOption: "
+           , settings.curr_player);
+  do {
+    scanf("%d", option);
+    getchar();
+    if(*option < 1 || *option > 4)
+      printf("Invalid Option!\nOption: ");
+  }while(*option < 1 || *option > 4);
+}
+
 void game_players()
 {
   Board settings;
@@ -407,13 +420,12 @@ void game_players()
     {
       case 1:
         play(&settings, &keep_play);
-        add_play(settings, &head);
+        add_play(&settings, &head);
         change_player(&settings);
         break;
 
       case 2:
         validation_new_rule(&settings);
-        //add_play(settings, &head);
         break;
 
       case 3:
@@ -508,13 +520,12 @@ void restart_game()
     {
       case 1:
         play(&settings, &keep_play);
-        add_play(settings, &head);
+        add_play(&settings, &head);
         change_player(&settings);
         break;
 
       case 2:
         validation_new_rule(&settings);
-        //add_play(settings, &head);
         break;
 
       case 3:
@@ -540,35 +551,6 @@ void restart_game()
   free_game_mem(&settings, &head);
 }
 
-void gamebot() {
-
-}
-
-void menu_gametype()
-{
-  int option;
-  do {
-    printf("1. Human vs Human\n2. Human vs Bot\n");
-    scanf("%d", &option);
-    getchar();
-
-    switch(option) {
-      case 1:
-        game_players();
-        break;
-
-      case 2:
-        gamebot();
-        break;
-
-      default:
-        printf("Option invalid!\n\n");
-        break;
-
-    }
-  }while(option != 1 && option != 2);
-}
-
 void menu()
 {
   int option;
@@ -582,7 +564,7 @@ void menu()
 
     switch(option) {
       case 1:
-        menu_gametype();
+        game_players();
         break;
 
       case 2:
