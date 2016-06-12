@@ -11,7 +11,7 @@ typedef struct game_board {
 
 typedef struct game_board_play {
     char **board, player[NAME_STR_LEN], play_col;
-    int nrows, ncol, play_row;
+    int nrows, ncol, play_row, new_rule_tag;
     struct game_board_play * next;
 } play_t;
 
@@ -30,9 +30,10 @@ void save_file(play_t * head)
   }
 
   while(curr != NULL) {
-    if(curr->play_row == -1)
-      fprintf(last_game, "%dº play: %s's %dº play -> Increased board size\n", num_play++,
-              curr->player, (*num_player_play)++);
+    if(curr->new_rule_tag == 1)
+      fprintf(last_game, "%dº play: %s's %dº play -> Increased board size."
+              "%c %d\n", num_play++, curr->player, (*num_player_play)++,
+              curr->play_col, curr->play_row);
     else
       fprintf(last_game, "%dº play: %s's %dº play -> %c %d\n", num_play++,
             curr->player, (*num_player_play)++, curr->play_col, curr->play_row);
@@ -71,9 +72,10 @@ void play_history(play_t *head)
 
   if(curr != NULL)
     while(curr != NULL) {
-      if(curr->play_row == -1)
-        printf("%dª play: %s's %dª play -> Increased board size\n", num_play++, curr->player,
-              (*num_player_play)++);
+      if(curr->new_rule_tag == 1)
+        printf("%dª play: %s's %dª play -> Increased Board Size. %c %d \n",
+              num_play++, curr->player, (*num_player_play)++, curr->play_col,
+              curr->play_row);
       else
         printf("%dª play: %s's %dª play -> %c %d\n", num_play++, curr->player,
               (*num_player_play)++, curr->play_col, curr->play_row);
@@ -101,24 +103,36 @@ void play_history(play_t *head)
     printf("There's no plays yet!\n");
 }
 
-void board_copy(Board game_board, play_t *new_play)
+void board_copy(Board settings, play_t *new_play)
 {
   int i, j;
 
-  new_play->play_row = game_board.play_row;
-  new_play->play_col = game_board.play_col;
-  new_play->nrows = game_board.nrows;
-  new_play->ncol = game_board.ncol;
+  new_play->play_row = settings.play_row;
+  new_play->play_col = settings.play_col;
+  new_play->nrows = settings.nrows;
+  new_play->ncol = settings.ncol;
 
   new_play->board = malloc(new_play->nrows * sizeof(char *));
   for(i = 0; i < new_play->nrows; i++)
     new_play->board[i] = malloc(new_play->ncol * sizeof(char));
 
-  for(i = 0; i < game_board.nrows; i++)
-    for(j = 0; j < game_board.ncol; j++)
-      new_play->board[i][j] = game_board.board[i][j];
+  for(i = 0; i < settings.nrows; i++)
+    for(j = 0; j < settings.ncol; j++)
+      new_play->board[i][j] = settings.board[i][j];
 
-  strcpy(new_play->player, game_board.curr_player);
+  strcpy(new_play->player, settings.curr_player);
+
+  if(!strcmp(settings.curr_player, settings.player1))
+    if(settings.new_rule_p1 == 1)
+      new_play->new_rule_tag = 1;
+    else
+      new_play->new_rule_tag = 0;
+  else
+    if(settings.new_rule_p2 == 1)
+      new_play->new_rule_tag = 1;
+    else
+      new_play->new_rule_tag = 0;
+
   new_play->next = NULL;
 }
 
@@ -316,8 +330,6 @@ void new_rule(Board * settings)
         settings->new_rule_p1++;
     else
         settings->new_rule_p2++;
-
-    settings->play_row = -1;
 }
 
 void validation_new_rule(Board * settings) {
@@ -341,7 +353,7 @@ void validation_new_rule(Board * settings) {
 
 void menu_game(Board settings, int *option)
 {
-  printf("%s, your turn to play:\n\n1. New Play\n2. Increase gameboard size\n"
+  printf("\n%s, your turn to play:\n\n1. New Play\n2. Increase gameboard size\n"
          "3. Play history\n4. Save and quit game\n"
          , settings.curr_player);
   scanf("%d", option);
@@ -401,7 +413,7 @@ void game_players()
 
       case 2:
         validation_new_rule(&settings);
-        add_play(settings, &head);
+        //add_play(settings, &head);
         break;
 
       case 3:
@@ -502,7 +514,7 @@ void restart_game()
 
       case 2:
         validation_new_rule(&settings);
-        add_play(settings, &head);
+        //add_play(settings, &head);
         break;
 
       case 3:
@@ -529,7 +541,7 @@ void restart_game()
 }
 
 void gamebot() {
-  printf("RUST\n");
+
 }
 
 void menu_gametype()
