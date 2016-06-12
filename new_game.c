@@ -211,7 +211,7 @@ void print_board(Board game_board)
 
   printf("\n\n\t\t|");
   for(i = 0, j = 'A';i < game_board.ncol; i++)
-    printf(" %c |", j++);
+    printf(" %c |", j++);Spotify
 
   for(i = 0;i < game_board.nrows; i++)
     for(j = 0; j < game_board.ncol; j++) {
@@ -263,10 +263,33 @@ void play(Board *game_board, int *keep_play)
       game_board->board[i][j] = ' ';
 }
 
+void new_rule(Board * settings)
+{
+  int i;
+
+  settings->board[settings->nrows - 1][settings->ncol - 1] = '*';
+  settings->nrows++;
+  settings->ncol++;
+  settings->board = realloc (settings->board ,settings->nrows * sizeof (char *));
+  for(i = 0; i < settings->nrows; i++)
+    settings->board[i] = realloc(settings->board[i], settings->ncol * sizeof (char));
+
+  for(i = 0; i < settings->ncol; i++)
+    settings->board[settings->nrows - 1][i] = '*';
+
+  for(i = 0; i < settings->nrows; i++)
+    settings->board[i][settings->ncol - 1] = '*';
+
+  settings->board[settings->nrows - 1][settings->ncol - 1] = 'X';
+
+  if()
+}
+
 void menu_game(Board settings, int *option)
 {
-  printf("%s, your turn to play:\n\n1. New Play\n2. Play history\n"
-         "3. Save and quit game\n", settings.curr_player);
+  printf("%s, your turn to play:\n\n1. New Play\n2. Add a column and a row to"
+         "board\n2. Play history\n3. Save and quit game\n"
+         , settings.curr_player);
   scanf("%d", option);
 }
 
@@ -353,7 +376,6 @@ void load_settings(FILE * old_settings, Board * settings, play_t ** head )
   for(i = 0; i < settings->nrows; i++)
     fread(settings->board[i], sizeof (char), settings->ncol, old_settings);
 
-  // Linked list reload
   *head = (play_t *) malloc(sizeof (play_t));
   curr = *head;
 
@@ -403,6 +425,7 @@ void restart_game()
   int keep_play = 1, option;
 
   load_game(&settings, &head);
+
   do {
     print_board(settings);
     menu_game(settings, &option);
@@ -427,6 +450,7 @@ void restart_game()
         break;
     }
   } while(keep_play);
+
   if(option == 1)
     printf("%s, you won!\n\n", settings.curr_player);
 
