@@ -6,7 +6,7 @@
 typedef struct game_board {
   char  **board, player1[NAME_STR_LEN], player2[NAME_STR_LEN], *curr_player,
         play_col;
-  int nrows, ncol, play_row, num_play;
+  int nrows, ncol, play_row, num_play, new_rule_p1, new_rule_p2;
 } Board;
 
 typedef struct game_board_play {
@@ -30,17 +30,25 @@ void save_file(play_t * head)
   }
 
   while(curr != NULL) {
-    fprintf(last_game, "%dº play: %s's %dº play -> %c %d\n", num_play++,
+    if(curr->play_row == -1)
+      fprintf(last_game, "%dº play: %s's %dº play -> Increased board size\n", num_play++,
+              curr->player, (*num_player_play)++);
+    else
+      fprintf(last_game, "%dº play: %s's %dº play -> %c %d\n", num_play++,
             curr->player, (*num_player_play)++, curr->play_col, curr->play_row);
+
     fprintf(last_game, "\t\t|");
+
     for(i = 0, j = 'A'; i < curr->ncol; i++)
       fprintf(last_game, " %c |", j++);
+
     for(i = 0; i < curr->nrows; i++)
       for(j = 0; j < curr->ncol; j++) {
         if(!j)
           fprintf(last_game, "\n\t   | %2d |", i+1);
         fprintf(last_game, " %c |", curr->board[i][j]);
       }
+
     fprintf(last_game, "\n\n");
 
     if(num_play2 < num_play1)
@@ -63,7 +71,11 @@ void play_history(play_t *head)
 
   if(curr != NULL)
     while(curr != NULL) {
-      printf("%dª play: %s's %dª play -> %c %d\n", num_play++, curr->player,
+      if(curr->play_row == -1)
+        printf("%dª play: %s's %dª play -> Increased board size\n", num_play++, curr->player,
+              (*num_player_play)++);
+      else
+        printf("%dª play: %s's %dª play -> %c %d\n", num_play++, curr->player,
               (*num_player_play)++, curr->play_col, curr->play_row);
 
       printf("\t\t|");
@@ -126,6 +138,7 @@ void add_play(Board game_board, play_t ** head)
     }
 }
 
+
 void set_rules(Board *game_board)
 {
   char confirmation='n';
@@ -179,7 +192,10 @@ void set_rules(Board *game_board)
   } while((confirmation!='y' && confirmation!='Y')
 			|| game_board->nrows < 4 || game_board->nrows > 8 || game_board->ncol < 6
       || game_board->ncol > 10 || game_board->ncol < game_board->nrows);
+
   game_board->num_play = 0;
+  game_board->new_rule_p1 = 0;
+  game_board->new_rule_p2 = 0;
 }
 
 void create_board(Board *game_board)
@@ -197,12 +213,26 @@ void create_board(Board *game_board)
     }
 }
 
-void free_board(Board *game_board)
+void free_game_mem(Board *settings, play_t ** head)
 {
   int i;
-  for(i = 0; i < game_board->nrows; i++)
-    free(game_board->board[i]);
-  free(game_board->board);
+  play_t * curr = * head, * aux;
+
+  for(i = 0; i < settings->nrows; i++)
+    free(settings->board[i]);
+  free(settings->board);
+
+  while(curr != NULL) {
+    aux = curr->next;
+    curr->next = NULL;
+
+    for(i = 0; i < curr->nrows; i++)
+      free(curr->board[i]);
+    free(curr->board);
+
+    free(curr);
+    curr = aux;
+  }
 }
 
 void print_board(Board game_board)
@@ -211,7 +241,7 @@ void print_board(Board game_board)
 
   printf("\n\n\t\t|");
   for(i = 0, j = 'A';i < game_board.ncol; i++)
-    printf(" %c |", j++);Spotify
+    printf(" %c |", j++);
 
   for(i = 0;i < game_board.nrows; i++)
     for(j = 0; j < game_board.ncol; j++) {
@@ -257,7 +287,7 @@ void play(Board *game_board, int *keep_play)
   } while(validation(game_board, end_row, end_col, keep_play));
 
   game_board->num_play++;
-  printf("Num play = %d\n", game_board->num_play);
+
   for(i = 0; i <= end_row; i++)
     for(j = 0; j <= end_col; j++)
       game_board->board[i][j] = ' ';
@@ -267,28 +297,52 @@ void new_rule(Board * settings)
 {
   int i;
 
-  settings->board[settings->nrows - 1][settings->ncol - 1] = '*';
-  settings->nrows++;
-  settings->ncol++;
-  settings->board = realloc (settings->board ,settings->nrows * sizeof (char *));
-  for(i = 0; i < settings->nrows; i++)
-    settings->board[i] = realloc(settings->board[i], settings->ncol * sizeof (char));
+    settings->board[settings->nrows - 1][settings->ncol - 1] = '*';
+    settings->nrows++;
+    settings->ncol++;
+    settings->board = realloc (settings->board ,settings->nrows * sizeof (char *));
+    for(i = 0; i < settings->nrows; i++)
+      settings->board[i] = realloc(settings->board[i], settings->ncol * sizeof (char));
 
-  for(i = 0; i < settings->ncol; i++)
-    settings->board[settings->nrows - 1][i] = '*';
+    for(i = 0; i < settings->ncol; i++)
+      settings->board[settings->nrows - 1][i] = '*';
 
-  for(i = 0; i < settings->nrows; i++)
-    settings->board[i][settings->ncol - 1] = '*';
+    for(i = 0; i < settings->nrows; i++)
+      settings->board[i][settings->ncol - 1] = '*';
 
-  settings->board[settings->nrows - 1][settings->ncol - 1] = 'X';
+    settings->board[settings->nrows - 1][settings->ncol - 1] = 'X';
 
-  if()
+    if(!strcmp(settings->curr_player, settings->player1))
+        settings->new_rule_p1++;
+    else
+        settings->new_rule_p2++;
+
+    settings->play_row = -1;
+}
+
+void validation_new_rule(Board * settings) {
+  if(!strcmp(settings->curr_player, settings->player1))
+    if(settings->new_rule_p1 == 0)
+      new_rule(settings);
+    else {
+      printf("You've already increased the board.\nPress any key to continue\n");
+      getchar();
+      printf("\n\n");
+    }
+  else
+    if(settings->new_rule_p2 == 0)
+      new_rule(settings);
+    else {
+        printf("You've already increased the board.\nPress any key to continue\n");
+        getchar();
+        printf("\n\n");
+      }
 }
 
 void menu_game(Board settings, int *option)
 {
-  printf("%s, your turn to play:\n\n1. New Play\n2. Add a column and a row to"
-         "board\n2. Play history\n3. Save and quit game\n"
+  printf("%s, your turn to play:\n\n1. New Play\n2. Increase gameboard size\n"
+         "3. Play history\n4. Save and quit game\n"
          , settings.curr_player);
   scanf("%d", option);
 }
@@ -344,13 +398,21 @@ void game_players()
         add_play(settings, &head);
         change_player(&settings);
         break;
+
       case 2:
+        validation_new_rule(&settings);
+        add_play(settings, &head);
+        break;
+
+      case 3:
         play_history(head);
         break;
-      case 3:
+
+      case 4:
         save_game(&settings, head);
         keep_play = 0;
         break;
+
       default:
         printf("Invalid Option!\nPress any key to continue.");
         getchar();
@@ -362,7 +424,7 @@ void game_players()
     printf("%s, you won!\n", settings.curr_player);
 
   save_file(head);
-  free_board(&settings);
+  free_game_mem(&settings, &head);
 }
 
 void load_settings(FILE * old_settings, Board * settings, play_t ** head )
@@ -437,13 +499,21 @@ void restart_game()
         add_play(settings, &head);
         change_player(&settings);
         break;
+
       case 2:
+        validation_new_rule(&settings);
+        add_play(settings, &head);
+        break;
+
+      case 3:
         play_history(head);
         break;
-      case 3:
+
+      case 4:
         save_game(&settings, head);
         keep_play = 0;
         break;
+
       default:
         printf("Invalid Option!\nPress any key to continue.");
         getchar();
@@ -455,8 +525,7 @@ void restart_game()
     printf("%s, you won!\n\n", settings.curr_player);
 
   save_file(head);
-  free_board(&settings);
-
+  free_game_mem(&settings, &head);
 }
 
 void gamebot() {
@@ -469,12 +538,21 @@ void menu_gametype()
   do {
     printf("1. Human vs Human\n2. Human vs Bot\n");
     scanf("%d", &option);
+    getchar();
 
     switch(option) {
-      case 1: game_players();
-              break;
-      case 2: gamebot();
-              break;
+      case 1:
+        game_players();
+        break;
+
+      case 2:
+        gamebot();
+        break;
+
+      default:
+        printf("Option invalid!\n\n");
+        break;
+
     }
   }while(option != 1 && option != 2);
 }
@@ -491,21 +569,31 @@ void menu()
     getchar();
 
     switch(option) {
-      case 1: menu_gametype();
-              break;
-      case 2: printf("Load last game\n");
-              restart_game();
-              break;
-      case 3: printf("Autor: Guilherme José Rodrigues Garrucho 21230252"
-                     "\nPress any key to continue. ");
-              getchar();
-              break;
-      case 4: printf("Are you sure? (Y/N)");
-              scanf("%c", &confirmation);
-              break;
-      default:printf("Invalid option!\nPress any key to continue!");
-              getchar();
-              break;
+      case 1:
+        menu_gametype();
+        break;
+
+      case 2:
+        printf("Load last game\n");
+        restart_game();
+        break;
+
+      case 3:
+        printf("Autor: Guilherme José Rodrigues Garrucho 21230252"
+               "\nPress any key to continue. ");
+        getchar();
+        break;
+
+      case 4:
+        printf("Are you sure? (Y/N)");
+        scanf("%c", &confirmation);
+        break;
+
+      default:
+        printf("Invalid option!\nPress any key to continue!");
+        getchar();
+        printf("\n\n");
+        break;
     }
   } while((confirmation != 'Y' && confirmation != 'y') || option != 4);
 }
