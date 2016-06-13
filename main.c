@@ -166,7 +166,7 @@ void game_players()
   free_game_mem(&settings, &head);
 }
 
-void restart_game()
+void restart_game_players()
 {
   Board settings;
   play_t *head = NULL;
@@ -262,29 +262,45 @@ void set_rules_bot(Board * settings)
   settings->new_rule_p2 = 0;
 }
 
+void init_random_gen()
+{
+  srand((unsigned) time(NULL));
+}
+
+int random_number(int min, int max)
+{
+  return min + rand() % (max - min + 1);
+}
+
 void play_bot(Board * settings, int *keep_play)
 {
-  time_t t;
   char play_col;
-  int i, j, play_row;
+  int i, j, play_row, play_new_rule;
 
-  srand((unsigned) time(&t));
+  init_random_gen();
+
+  play_new_rule = random_number(0, 1);
+  if(play_new_rule == 1 && settings->new_rule_p2 == 0)
+    new_rule(settings);
 
   do {
-    do {
-      play_col = rand();
-      printf("%d\n", play_col);
-    }while(play_col < 0 || play_col > settings->ncol - 1);
-
-    do {
-      play_row = rand();
-      printf("%d\n", play_row);
-    }while(play_row < 0 || play_row > settings->nrows - 1);
+    play_col = random_number(0, settings->ncol - 1);
+    play_row = random_number(0, settings->nrows - 1);
   }while(validation(settings, play_row, play_col, keep_play));
 
   for(i = 0; i <= play_row; i++)
     for(j = 0; j <= play_col; j++)
       settings->board[i][j] = ' ';
+
+  if(settings->new_rule_p2 == 1) {
+    printf("%s's play -> Increased game board size %c %d\n\n",
+            settings->player2, play_col + 'A', play_row + 1);
+    settings->new_rule_p2 = 2;
+  } else
+    printf("%s's play -> %c %d\n\n",
+            settings->player2, play_col + 'A', play_row + 1);
+
+  print_board(*settings);
 }
 
 void game_bot()
@@ -321,7 +337,59 @@ void game_bot()
           break;
 
         case 4:
-          save_game(&settings, head);
+          save_game_bot(&settings, head);
+          keep_play = 0;
+          break;
+
+        default:
+          printf("Invalid Option!\nPress any key to continue.");
+          getchar();
+          break;
+      }
+
+    } while(keep_play);
+
+    if(option == 1) {
+      printf("%s, you won!\n", settings.curr_player);
+      save_file(head);
+    }
+    free_game_mem(&settings, &head);
+}
+
+void restart_game_bot()
+{
+    Board settings;
+    play_t *head = NULL;
+    int keep_play = 1, option;
+
+    load_game_bot(&settings, &head);
+
+    do {
+      print_board(settings);
+      menu_game(settings, &option);
+
+      switch(option)
+      {
+        case 1:
+          play(&settings, &keep_play);
+          add_play(&settings, &head);
+          change_player(&settings);
+
+          play_bot(&settings, &keep_play);
+          add_play(&settings, &head);
+          change_player(&settings);
+          break;
+
+        case 2:
+          validation_new_rule(&settings);
+          break;
+
+        case 3:
+          play_history(head);
+          break;
+
+        case 4:
+          save_game_bot(&settings, head);
           keep_play = 0;
           break;
 
@@ -360,6 +428,26 @@ void menu_gametype()
   }
 }
 
+void menu_restart_game()
+{
+  int option;
+
+  printf("1. Human vs Human\n2. Human vs BOT\nOption: ");
+  do {
+    scanf("%d", &option);
+    getchar();
+  }while(option != 1 && option != 2);
+
+  switch(option) {
+    case 1:
+      restart_game_players();
+      break;
+    case 2:
+      restart_game_bot();
+      break;
+  }
+}
+
 void menu()
 {
   int option;
@@ -378,7 +466,7 @@ void menu()
 
       case 2:
         printf("Load last game\n");
-        restart_game();
+        menu_restart_game();
         break;
 
       case 3:

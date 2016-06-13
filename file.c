@@ -24,6 +24,29 @@ void save_game(Board * settings, play_t * head)
   fclose(settings_file);
 }
 
+void save_game_bot(Board * settings, play_t * head)
+{
+  FILE * settings_file;
+  play_t * curr = head;
+  int i;
+
+  settings_file = fopen("last_settings_bot.dat", "wb");
+
+  fwrite(settings, sizeof (Board), 1, settings_file);
+
+  for(i = 0; i < settings->nrows; i++)
+    fwrite(settings->board[i], sizeof (char), settings->ncol, settings_file);
+
+  while(curr != NULL) {
+    fwrite(curr, sizeof (play_t), 1, settings_file);
+    for(i = 0; i < curr->nrows; i++)
+      fwrite(curr->board[i], sizeof (char), curr->ncol, settings_file);
+    curr = curr->next;
+  }
+
+  fclose(settings_file);
+}
+
 void save_file(play_t * head)
 {
   FILE * last_game;
@@ -110,6 +133,30 @@ void load_game(Board * settings, play_t **head)
   play_t * curr;
 
   old_settings = fopen("last_settings.dat", "rb");
+  if(old_settings == NULL) {
+    printf("Error creating file!\n");
+    return;
+  }
+  load_settings(old_settings, settings, head);
+
+  curr = *head;
+  while(curr->next !=NULL)
+    curr = curr->next;
+
+  if(!strcmp(curr->player, settings->player1))
+    settings->curr_player = settings->player2;
+  else
+    settings->curr_player = settings->player1;
+
+  fclose(old_settings);
+}
+
+void load_game_bot(Board * settings, play_t **head)
+{
+  FILE * old_settings;
+  play_t * curr;
+
+  old_settings = fopen("last_settings_bot.dat", "rb");
   if(old_settings == NULL) {
     printf("Error creating file!\n");
     return;
