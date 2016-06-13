@@ -82,7 +82,7 @@ void play(Board *settings, int *keep_play)
   int end_row, end_col, i, j;
 
   do {
-    printf("%s, your turn to play (c/l): ", settings->curr_player);
+    printf("%s, your turn to play (c l): ", settings->curr_player);
     scanf(" %c %d", &(settings->play_col), &(settings->play_row));
 
     end_row = settings->play_row - 1;
@@ -454,8 +454,8 @@ void menu()
   char confirmation;
 
   do {
-    printf("\t1. New Game\n\t2. Load Last Game\n\t3. Credits\n\t4. Quit Game"
-           "\nOption: ");
+    printf("\t1. New Game\n\t2. Load Last Game\n\t3. Credits\n\t4. How to Play"
+           "\n\t5. Quit Game\nOption: ");
     scanf("%d", &option);
     getchar();
 
@@ -470,12 +470,38 @@ void menu()
         break;
 
       case 3:
-        printf("Autor: Guilherme José Rodrigues Garrucho 21230252"
+        printf("Author: Guilherme José Rodrigues Garrucho 21230252"
                "\nPress any key to continue. ");
         getchar();
         break;
 
       case 4:
+        printf("\nJogo do Comilao is played with two players or against a bot,\n"
+               "with a board divided by cells, identified by its size, rows \n"
+               "and columns. The columns are represented by letters and the \n"
+               "lines with numbers. All the cells contain food, represented \n"
+               "by *, except the bottom cell of the right side of the board,\n"
+               "which cotains the venom. The objetive of the game is to     \n"
+               "force your opponent to eat the venom.\n\n"
+               "When you start a game, every player has to enter his/her name.\n"
+               "The first player chooses the size of the game board and the \n"
+               "second, if he/she agrees, accepts it and the game starts.\n\n"
+               "When the game begins, it will present you a menu:\n"
+               "\tYou can choose to play, which you means you insert the \n"
+               "\tcoordinates and the game board is clear vertically and \n"
+               "\thorizontally until the cell selected, never exceeding \n"
+               "\tthe limits of the line and column of the selected cell.\n\n"
+               "\tYou can increase the game board size by one line and one \n"
+               "\tcolumn, simultaneously, but only once during a game.\n\n"
+               "\tYou can check every play of all the players, during the\n"
+               "\tgame.\n\n"
+               "\tAnd lastly, you can interrupt the game, save it, so you can\n"
+               "\tcontinue, whenever you want you.\n\n");
+        printf("\nPress any key to continue\n");
+        getchar();
+        break;
+
+      case 5:
         printf("Are you sure? (Y/N)");
         scanf("%c", &confirmation);
         break;
@@ -486,7 +512,7 @@ void menu()
         printf("\n\n");
         break;
     }
-  } while((confirmation != 'Y' && confirmation != 'y') || option != 4);
+  } while((confirmation != 'Y' && confirmation != 'y') || option != 5);
 }
 
 int main(void)
