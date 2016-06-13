@@ -42,9 +42,8 @@ void set_rules(Board * settings)
             printf("\n\t%s, do you agree with the game board size? (Y/N) ",
                settings->player2);
             do {
-
               scanf("%c", &confirmation);
-               getchar();
+              getchar();
           } while(confirmation != 'Y' && confirmation != 'y'
                   && confirmation != 'N' && confirmation != 'n');
           }
@@ -215,6 +214,152 @@ void restart_game()
   free_game_mem(&settings, &head);
 }
 
+void set_rules_bot(Board * settings)
+{
+  printf("Player 1, please insert your name: ");
+  scanf("%s", settings->player1);
+  strcpy(settings->player2, "BOT");
+
+  settings->curr_player = settings->player1;
+
+  do {
+    printf("\t%s, insert the size of the game board.\nLines: ",
+           settings->player1);
+    scanf("%d", &(settings->nrows));
+    printf("Columns: ");
+    scanf("%d", &(settings->ncol));
+    getchar();
+
+    if(settings->ncol > settings->nrows) {
+      if(settings->nrows < 4 || settings->nrows > 8)
+        if(settings->ncol < 6 || settings->ncol > 10) {
+          printf("\nGame board size invalid! Number of columns and rows"
+                 " invalid!\nPress any key to continue");
+          getchar();
+        } else {
+          printf("\nGame board size invalid! Number of rows invalid!\n"
+                 "Press any key to continue");
+          getchar();
+        }
+      else
+          if(settings->ncol < 6 || settings->ncol > 10) {
+            printf("\nGame board size invalid! Number of columns invalid!\n"
+                   "Press any key to continue");
+            getchar();
+          } else {
+            printf("BOT: Let's Play!\n\n");
+          }
+    } else {
+      printf("Number of columns is less than number of rows.\n"
+             "Press any key to continue");
+      getchar();
+    }
+  } while(settings->nrows < 4 || settings->nrows > 8 || settings->ncol < 6 ||
+          settings->ncol > 10 || settings->ncol < settings->nrows);
+
+  settings->num_play = 0;
+  settings->new_rule_p1 = 0;
+  settings->new_rule_p2 = 0;
+}
+
+void play_bot(Board * settings, int *keep_play)
+{
+  time_t t;
+  char play_col;
+  int i, j, play_row;
+
+  srand((unsigned) time(&t));
+
+  do {
+    do {
+      play_col = rand();
+      printf("%d\n", play_col);
+    }while(play_col < 0 || play_col > settings->ncol - 1);
+
+    do {
+      play_row = rand();
+      printf("%d\n", play_row);
+    }while(play_row < 0 || play_row > settings->nrows - 1);
+  }while(validation(settings, play_row, play_col, keep_play));
+
+  for(i = 0; i <= play_row; i++)
+    for(j = 0; j <= play_col; j++)
+      settings->board[i][j] = ' ';
+}
+
+void game_bot()
+{
+    Board settings;
+    play_t *head = NULL;
+    int keep_play = 1, option;
+
+    set_rules_bot(&settings);
+    create_board(&settings);
+
+    do {
+      print_board(settings);
+      menu_game(settings, &option);
+
+      switch(option)
+      {
+        case 1:
+          play(&settings, &keep_play);
+          add_play(&settings, &head);
+          change_player(&settings);
+
+          play_bot(&settings, &keep_play);
+          add_play(&settings, &head);
+          change_player(&settings);
+          break;
+
+        case 2:
+          validation_new_rule(&settings);
+          break;
+
+        case 3:
+          play_history(head);
+          break;
+
+        case 4:
+          save_game(&settings, head);
+          keep_play = 0;
+          break;
+
+        default:
+          printf("Invalid Option!\nPress any key to continue.");
+          getchar();
+          break;
+      }
+
+    } while(keep_play);
+
+    if(option == 1) {
+      printf("%s, you won!\n", settings.curr_player);
+      save_file(head);
+    }
+    free_game_mem(&settings, &head);
+}
+
+void menu_gametype()
+{
+  int option;
+
+  printf("1. Human vs Human\n2. Human vs BOT\nOption: ");
+  do {
+    scanf("%d", &option);
+    getchar();
+  }while(option != 1 && option != 2);
+
+  switch(option) {
+    case 1:
+      game_players();
+      break;
+    case 2:
+      game_bot();
+      break;
+  }
+}
+
 void menu()
 {
   int option;
@@ -228,7 +373,7 @@ void menu()
 
     switch(option) {
       case 1:
-        game_players();
+        menu_gametype();
         break;
 
       case 2:
