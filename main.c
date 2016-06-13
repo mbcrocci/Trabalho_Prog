@@ -1,19 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#define NAME_STR_LEN 40
-
-typedef struct game_settings {
-  char  **board, player1[NAME_STR_LEN], player2[NAME_STR_LEN], *curr_player,
-        play_col;
-  int nrows, ncol, play_row, num_play, new_rule_p1, new_rule_p2;
-} Board;
-
-typedef struct game_play {
-    char **board, player[NAME_STR_LEN], play_col;
-    int nrows, ncol, play_row, new_rule_tag;
-    struct game_play * next;
-} play_t;
+#include "main.h"
+#include "file.h"
+#include "play.h"
+#include "board.h"
 
 void set_rules(Board * settings)
 {
@@ -119,9 +107,8 @@ void change_player(Board *settings)
 
 void menu_game(Board settings, int *option)
 {
-
-    printf("\n%s, your turn to play:\n\n1. New Play\n2. Increase gameboard size\n"
-           "3. Play history\n4. Save and quit game\nOption: "
+  printf("\n%s, your turn to play:\n\n1. New Play\n2. Increase gameboard size"
+           "\n3. Play history\n4. Save and quit game\nOption: "
            , settings.curr_player);
   do {
     scanf("%d", option);
@@ -172,10 +159,11 @@ void game_players()
     }
   } while(keep_play);
 
-  if(option == 1)
+  if(option == 1) {
     printf("%s, you won!\n", settings.curr_player);
+    save_file(head);
+  }
 
-  save_file(head);
   free_game_mem(&settings, &head);
 }
 
@@ -219,10 +207,11 @@ void restart_game()
     }
   } while(keep_play);
 
-  if(option == 1)
-    printf("%s, you won!\n\n", settings.curr_player);
+  if(option == 1) {
+    printf("%s, you won!\n", settings.curr_player);
+    save_file(head);
+  }
 
-  save_file(head);
   free_game_mem(&settings, &head);
 }
 
